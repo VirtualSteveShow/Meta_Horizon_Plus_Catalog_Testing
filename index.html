@@ -2232,6 +2232,7 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
   const isClaimable = (g.name === 'Arizona Sunshine Remake' || g.name === 'The Pirate: Republic of Nassau');
   card.className = 'game-card' + (g.type === 'indie' ? ' indie' : '') + (isClaimable ? ' claimable' : '') + (extraClass ? ' ' + extraClass : '');
   card.dataset.genreGroup = genreGroup(g.genre);
+  applyHeroArt(card, g.name);
   const safeName = g.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const mpBadges = (g.mp||[]).map(m =>
     m === 'multi' ? '<span class="mp-badge multi">👥 MULTI</span>' :
