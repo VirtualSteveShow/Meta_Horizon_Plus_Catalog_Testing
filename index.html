@@ -3033,7 +3033,8 @@ document.addEventListener('fullscreenchange', () => {
 // ══════════════════════════════════════════════════════════
 function applyHeroArt(card, gameName) {
   const src = HERO_ART[gameName];
-  if (!src) return;
+  if (!src) { if(gameName==='Beat Saber') console.log('HERO_ART miss for:', gameName, 'keys:', Object.keys(HERO_ART).slice(0,3)); return; }
+  console.log('Loading art for:', gameName, src);
   const img = new Image();
   img.onload = () => {
     card.style.backgroundImage = `url('${src}')`;
