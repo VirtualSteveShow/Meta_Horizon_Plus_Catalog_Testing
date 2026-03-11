@@ -773,7 +773,7 @@
   }
 
   .game-card {
-    background: var(--card);
+    background-color: var(--card);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 11px 14px 11px 14px;
@@ -781,7 +781,7 @@
     align-items: flex-start;
     gap: 12px;
     cursor: default;
-    transition: border-color 0.15s, background-color 0.15s;
+    transition: border-color 0.15s;
     position: relative;
     overflow: hidden;
   }
@@ -826,10 +826,10 @@
     transform: translateY(-50%);
     flex-shrink: 0;
   }
-  .game-card.monthly      { border-color: rgba(34,197,94,0.4); background: #0d1a14; }
+  .game-card.monthly      { border-color: rgba(34,197,94,0.4); background-color: #0d1a14; }
   .game-card.claimable    {
     border-color: rgba(34,197,94,0.5);
-    background: linear-gradient(135deg, #0a1a10 0%, #0d1520 100%);
+    background-image: linear-gradient(135deg, #0a1a10 0%, #0d1520 100%);
     border-left-color: #22c55e !important;
   }
   .claim-notice {
@@ -864,7 +864,12 @@
   body.can-hover .game-card:hover .remove-btn{ opacity: 1; }
 
   .game-card.has-art {
-    transition: border-color 0.15s, background-color 0.15s;
+    transition: border-color 0.15s;
+    background-size: cover !important;
+  }
+  body.can-hover .game-card.has-art:hover,
+  body.can-hover .game-card.indie.has-art:hover {
+    background-size: cover !important;
   }
 
   .game-info { flex: 1; min-width: 0; padding-top: 1px; }
