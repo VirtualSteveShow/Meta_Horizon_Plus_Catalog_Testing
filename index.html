@@ -854,10 +854,10 @@
   .game-card.monthly::before      { background: var(--green); opacity: 1; }
 
   /* hover states applied only when body.can-hover is set by JS */
-  body.can-hover .game-card:hover            { border-color: var(--blue); background: #141e2e; }
-  body.can-hover .game-card.has-art:hover    { background-image: var(--bg-img) !important; background-color: transparent; }
-  body.can-hover .game-card.indie:hover      { border-color: var(--purple); background: #130f1e; }
-  body.can-hover .game-card.indie.has-art:hover { background-image: var(--bg-img) !important; background-color: transparent; }
+  body.can-hover .game-card:hover            { border-color: var(--blue); background-color: #141e2e; }
+  body.can-hover .game-card.has-art:hover    { background-image: var(--bg-img) !important; background-color: transparent; background-size: cover; }
+  body.can-hover .game-card.indie:hover      { border-color: var(--purple); background-color: #130f1e; }
+  body.can-hover .game-card.indie.has-art:hover { background-image: var(--bg-img) !important; background-color: transparent; background-size: cover; }
   body.can-hover .game-card.monthly:hover    { border-color: var(--green); }
   body.can-hover .game-card:hover::before    { opacity: 1; }
   body.can-hover .game-card:hover .star-btn  { opacity: 0.5; }
