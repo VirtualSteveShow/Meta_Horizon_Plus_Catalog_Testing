@@ -801,6 +801,7 @@
     pointer-events: none;
     z-index: 0;
   }
+  .game-card.placeholder-art::before { background: rgba(8,14,24,0.2); }
   .game-card.has-art > * { position: relative; z-index: 1; }
   .game-card.has-art .game-info {
     flex: 0 0 auto;
@@ -863,6 +864,22 @@
   body.can-hover .game-card:hover::before    { opacity: 1; }
   body.can-hover .game-card:hover .star-btn  { opacity: 0.5; }
   body.can-hover .game-card:hover .remove-btn{ opacity: 1; }
+
+  /* ── PC ART CARD ZOOM — only on real pointer/hover devices at desktop width ── */
+  .game-card.has-art {
+    transition: border-color 0.15s, background 0.15s, transform 0.22s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.22s;
+    will-change: transform;
+  }
+  @media (min-width: 900px) {
+    body.can-hover .game-card.has-art:hover {
+      transform: scale(1.035);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(14,165,233,0.35);
+      z-index: 2;
+    }
+    body.can-hover .game-card.indie.has-art:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(168,85,247,0.35);
+    }
+  }
 
   .game-info { flex: 1; min-width: 0; padding-top: 1px; }
   .game-name {
@@ -2236,8 +2253,9 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
   // Monthly free = Arizona Sunshine Remake and The Pirate: Republic of Nassau (the actual claimables)
   const isClaimable = (g.name === 'Arizona Sunshine Remake' || g.name === 'The Pirate: Republic of Nassau');
   card.className = 'game-card' + (g.type === 'indie' ? ' indie' : '') + (isClaimable ? ' claimable' : '') + (extraClass ? ' ' + extraClass : '');
-  card.dataset.genreGroup = genreGroup(g.genre);
-  applyHeroArt(card, g.name);
+  const gg = genreGroup(g.genre);
+  card.dataset.genreGroup = gg;
+  applyHeroArt(card, g.name, gg);
   const safeName = g.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   const mpBadges = (g.mp||[]).map(m =>
     m === 'multi' ? '<span class="mp-badge multi">👥 MULTI</span>' :
@@ -3038,9 +3056,39 @@ document.addEventListener('fullscreenchange', () => {
 // ══════════════════════════════════════════════════════════
 // HERO ART MAP — add filenames here as art is created
 // ══════════════════════════════════════════════════════════
-function applyHeroArt(card, gameName) {
+function applyHeroArt(card, gameName, genreGroup) {
   const src = HERO_ART[gameName];
-  if (!src) return;
+
+  function applyPlaceholder() {
+    // Genre-keyed gradient palettes
+    const palettes = {
+      shooter:    ['#0c1a2e','#1a3a5c','#0ea5e9'],
+      puzzle:     ['#0d1a20','#0a2a30','#06b6d4'],
+      sports:     ['#0a1a0a','#1a3a1a','#22c55e'],
+      rhythm:     ['#1a0a2e','#2a1a4e','#a855f7'],
+      rpg:        ['#1a0a1a','#2e0a3a','#c026d3'],
+      strategy:   ['#1a1400','#2e2200','#f59e0b'],
+      fitness:    ['#001a0a','#003a1a','#10b981'],
+      simulation: ['#0a0a1a','#1a1a3a','#6366f1'],
+      adventure:  ['#1a0a00','#2e1a00','#f97316'],
+      action:     ['#1a0000','#2e0a0a','#ef4444'],
+      social:     ['#001a1a','#003a3a','#14b8a6'],
+      creative:   ['#0a001a','#1a003a','#8b5cf6'],
+      default:    ['#0d1120','#111827','#1e2d45'],
+    };
+    const gg = genreGroup || 'default';
+    const [c1, c2, c3] = palettes[gg] || palettes.default;
+    const seed = [...gameName].reduce((a, c) => a + c.charCodeAt(0), 0);
+    const ang = (seed % 60) + 120;
+    const pct = 30 + (seed % 40);
+    const grad = `linear-gradient(${ang}deg, ${c1} 0%, ${c2} ${pct}%, ${c3} 100%)`;
+    card.style.backgroundImage = grad;
+    card.style.setProperty('--bg-img', grad);
+    card.classList.add('has-art', 'placeholder-art');
+  }
+
+  if (!src) { applyPlaceholder(); return; }
+
   const img = new Image();
   img.onload = () => {
     card.style.backgroundImage = `url('${src}')`;
@@ -3048,13 +3096,14 @@ function applyHeroArt(card, gameName) {
     card.classList.add('has-art');
   };
   img.onerror = () => {
-    // Try jpg fallback if png fails and vice versa
     const alt = src.endsWith('.png') ? src.replace('.png','.jpg') : src.replace('.jpg','.png');
     const img2 = new Image();
     img2.onload = () => {
       card.style.backgroundImage = `url('${alt}')`;
+      card.style.setProperty('--bg-img', `url('${alt}')`);
       card.classList.add('has-art');
     };
+    img2.onerror = () => applyPlaceholder();
     img2.src = alt;
   };
   img.src = src;
