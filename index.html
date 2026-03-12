@@ -505,25 +505,7 @@
   }
 
   /* ── REMOVE BUTTON on game cards ── */
-  .remove-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--muted);
-    font-size: 13px;
-    width: 26px;
-    height: 26px;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    flex-shrink: 0;
-    opacity: 0.4;
-    align-self: flex-start;
-    margin-right: 18px;
-  }
-  .remove-btn:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
 
 
   .header::before {
@@ -777,72 +759,47 @@
     contain: layout style;
   }
 
+  /* ══════════════════════════════════════════
+     GAME CARD — fully absolute overlay system
+     All children position:absolute, no flex inside card
+     Mobile: 130px tall  /  PC: 280px (via media query)
+     Placeholder: two-tone bg shows mobile safe zone vs PC-only
+  ══════════════════════════════════════════ */
   .game-card {
-    background-color: var(--card);
+    background-image: linear-gradient(to right,
+      #0d1a2e 0%, #0d1a2e 29%,
+      #0a2540 29%, #0a2540 71%,
+      #0d1a2e 71%, #0d1a2e 100%
+    );
+    background-size: cover;
+    background-position: center;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 11px 14px 11px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
     cursor: default;
-    transition: border-color 0.15s;
     position: relative;
     overflow: hidden;
     height: 130px;
     box-sizing: border-box;
+    transition: border-color 0.15s, background-color 0.15s;
   }
   .game-card.has-art {
-    background-size: cover;
-    background-position: center;
+    background-image: var(--bg-img);
   }
-  .game-card.has-art::before {
+  /* Gradient overlay on all cards for text legibility */
+  .game-card::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(8,14,24,0.45);
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.25) 0%,
+      rgba(0,0,0,0.05) 45%,
+      rgba(0,0,0,0.6) 100%
+    );
     pointer-events: none;
     z-index: 0;
   }
-  .game-card.has-art > * { position: relative; z-index: 1; }
-  .game-card.has-art .game-info {
-    flex: 0 0 auto;
-    display: table;
-    max-width: 62%;
-    background: rgba(0,0,0,0.72);
-    border-radius: 8px;
-    padding: 7px 10px;
-    align-self: center;
-  }
-  .game-card.has-art .card-actions {
-    background: rgba(0,0,0,0.65);
-    border-radius: 8px;
-    padding: 8px 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    flex-shrink: 0;
-  }
-  .game-card.monthly      { border-color: rgba(34,197,94,0.4); background-color: #0d1a14; }
-  .game-card.claimable    {
-    border-color: rgba(34,197,94,0.5);
-    background-image: linear-gradient(135deg, #0a1a10 0%, #0d1520 100%);
-    border-left-color: #22c55e !important;
-  }
-  .claim-notice {
-    font-size: 10px;
-    font-weight: 700;
-    color: #4ade80;
-    letter-spacing: 0.04em;
-    margin-top: 4px;
-    font-family: 'JetBrains Mono', monospace;
-  }
-
+  /* Left accent bar */
   .game-card::before {
     content: '';
     position: absolute;
@@ -851,30 +808,90 @@
     background: var(--blue);
     opacity: 0;
     transition: opacity 0.15s;
+    z-index: 3;
   }
-  .game-card.indie::before        { background: var(--purple); }
-  .game-card.monthly::before      { background: var(--green); opacity: 1; }
+  .game-card.indie::before   { background: var(--purple); }
+  .game-card.monthly::before { background: var(--green); opacity: 1; }
+  .game-card.monthly         { border-color: rgba(34,197,94,0.4); }
+  .game-card.claimable       { border-color: rgba(34,197,94,0.5); border-left-color: #22c55e !important; }
 
-  /* hover states applied only when body.can-hover is set by JS */
-  body.can-hover .game-card:hover            { border-color: var(--blue); background-color: #141e2e; }
-  body.can-hover .game-card.has-art:hover    { background-image: var(--bg-img) !important; background-color: transparent; background-size: cover; }
-  body.can-hover .game-card.indie:hover      { border-color: var(--purple); background-color: #130f1e; }
-  body.can-hover .game-card.indie.has-art:hover { background-image: var(--bg-img) !important; background-color: transparent; background-size: cover; }
+  /* ── TOP-LEFT: game name + genre ── */
+  .card-title-block {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    max-width: 65%;
+    z-index: 2;
+    background: rgba(0,0,0,0.55);
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .game-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f1f5f9;
+    line-height: 1.3;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  .game-genre {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 300;
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* ── BOTTOM-LEFT: rating + tags ── */
+  .card-bottom-left {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .card-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+
+  /* ── BOTTOM-CENTER: store, star, remove ── */
+  .card-bottom-center {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .game-card.monthly      { border-color: rgba(34,197,94,0.4); background-color: #0d1a14; }
+  .game-card.claimable    {
+    border-color: rgba(34,197,94,0.5);
+    background-image: linear-gradient(135deg, #0a1a10 0%, #0d1520 100%);
+    border-left-color: #22c55e !important;
+  }
+
+
+
+
+  /* hover states — can-hover only (real pointer devices) */
+  body.can-hover .game-card:hover            { border-color: var(--blue); }
+  body.can-hover .game-card.indie:hover      { border-color: var(--purple); }
   body.can-hover .game-card.monthly:hover    { border-color: var(--green); }
   body.can-hover .game-card:hover::before    { opacity: 1; }
-  body.can-hover .game-card:hover .star-btn  { opacity: 0.5; }
+  body.can-hover .game-card:hover .star-btn  { opacity: 0.6; }
   body.can-hover .game-card:hover .remove-btn{ opacity: 1; }
 
-  .game-card.has-art {
-    transition: border-color 0.15s;
-    background-size: cover !important;
-  }
-  body.can-hover .game-card.has-art:hover,
-  body.can-hover .game-card.indie.has-art:hover {
-    background-size: cover !important;
-  }
 
-  .game-info { flex: 1; min-width: 0; padding-top: 1px; }
   .game-name {
     font-size: 13px;
     font-weight: 600;
@@ -890,12 +907,7 @@
     margin-top: 2px;
     display: block;
   }
-  .mp-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 5px;
-  }
+
 
   .tag {
     font-family: 'JetBrains Mono', monospace;
@@ -912,39 +924,31 @@
   .tag-new  { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
 
   /* ── CORNER RIBBON ── */
-  .ribbon-anchor {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-    z-index: 2;
-  }
   .corner-ribbon {
     position: absolute;
+    /* W=90px → offset = W/√2/2 = 31.8 → ~32px from corner */
+    bottom: -32px;
+    right: -32px;
     width: 90px;
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.1em;
-    padding: 3px 0;
-    /* center of ribbon sits W*0.354 from each edge */
-    bottom: 26px;
-    right: -26px;
+    padding: 4px 0;
     transform: rotate(-45deg);
     transform-origin: center center;
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
   .corner-ribbon.mar {
-    background: rgba(239,68,68,0.85);
+    background: rgba(239,68,68,0.9);
     color: #fff;
-    box-shadow: 0 1px 6px rgba(239,68,68,0.4);
   }
   .corner-ribbon.jan {
-    background: rgba(14,165,233,0.85);
+    background: rgba(14,165,233,0.9);
     color: #fff;
-    box-shadow: 0 1px 6px rgba(14,165,233,0.4);
   }
   .tag-free { background: rgba(34,197,94,0.15);   color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
 
@@ -1140,48 +1144,89 @@
     color: var(--muted);
   }
 
-  /* ── STAR ── */
-  .star-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 15px;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-    flex-shrink: 0;
-    opacity: 0.25;
-    transition: opacity 0.2s, transform 0.2s;
-  }
-  .star-btn.starred { opacity: 1; transform: scale(1.15); }
+
 
   /* ── STORE BUTTON ── */
   .store-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--muted);
+    background: rgba(8,14,24,0.88);
+    border: 1px solid rgba(14,165,233,0.5);
+    color: #7dd3fc;
     cursor: pointer;
     font-size: 11px;
     font-family: 'JetBrains Mono', monospace;
-    padding: 3px 7px;
-    border-radius: 4px;
+    padding: 5px 10px;
+    border-radius: 5px;
     flex-shrink: 0;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.15s;
+    transition: border-color 0.15s, background 0.15s;
     white-space: nowrap;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.7));
   }
   .store-btn:hover {
     border-color: var(--blue);
-    color: var(--blue);
-    background: rgba(14,165,233,0.08);
+    color: #fff;
+    background: rgba(14,165,233,0.25);
   }
-  .game-card.indie .store-btn:hover {
-    border-color: var(--purple);
-    color: var(--purple);
-    background: rgba(168,85,247,0.08);
+  .game-card.indie .store-btn { border-color: rgba(168,85,247,0.5); color: #d8b4fe; }
+  .game-card.indie .store-btn:hover { border-color: var(--purple); color: #fff; background: rgba(168,85,247,0.2); }
+
+  /* ── STAR ── */
+  .star-btn {
+    background: rgba(8,14,24,0.7);
+    border: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .star-btn.starred { opacity: 1; transform: scale(1.15); }
+
+  /* ── REMOVE BTN ── */
+  .remove-btn {
+    background: rgba(8,14,24,0.7);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--muted);
+    font-size: 13px;
+    width: 28px;
+    height: 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: 0.4;
+    transition: all 0.15s;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .remove-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #fca5a5; opacity: 1; }
+
+  /* ── CLAIM BADGE ── */
+  .claim-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.35);
+    border-radius: 3px;
+    padding: 2px 5px;
+    letter-spacing: 0.06em;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
+  }
+  .game-genre-indie {
+    color: #a855f7;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
   }
 
   /* ── STARRED SECTION ── */
@@ -1357,25 +1402,31 @@
       max-width: 860px;
       box-sizing: border-box;
     }
-    .game-name  { font-size: 16px; }
+    .game-name  { font-size: 18px; }
     .game-genre { font-size: 13px; }
-    .store-btn  { font-size: 13px; padding: 6px 14px; }
-    .star-btn   { font-size: 17px; }
-    .remove-btn { font-size: 15px; width: 30px; height: 30px; }
+    .store-btn  { font-size: 13px; padding: 8px 16px; }
+    .star-btn   { font-size: 20px; padding: 5px 8px; }
+    .remove-btn { font-size: 16px; width: 34px; height: 34px; }
     .section-title { font-size: 18px; }
     .tag { font-size: 10px; padding: 3px 8px; }
-    .game-card { padding: 14px 18px; height: 280px; align-items: center; }
+    .game-card { height: 280px; }
     .filter-btn { font-size: 13px; padding: 8px 18px; }
     .section-search { font-size: 14px; }
+    .card-title-block { top: 16px; left: 16px; padding: 8px 12px; max-width: 55%; }
+    .card-bottom-left { bottom: 16px; left: 16px; gap: 6px; }
+    .card-bottom-center { bottom: 16px; gap: 12px; }
+    .mp-badge { font-size: 12px; padding: 4px 10px; }
+    .claim-badge { font-size: 11px; padding: 4px 8px; }
     /* ── PC LAYOUT ── */
     .monthly-grid { justify-content: center; }
     .monthly-card { max-width: 420px; }
+    /* PC ribbon: W=270 → offset = 270/√2/2 ≈ 95px from corner */
     .corner-ribbon {
       width: 270px;
-      font-size: 24px;
-      padding: 9px 0;
-      bottom: 78px;
-      right: -78px;
+      font-size: 22px;
+      padding: 10px 0;
+      bottom: -95px;
+      right: -95px;
       letter-spacing: 0.12em;
     }
   }
@@ -2271,22 +2322,33 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     m === 'multi' ? '<span class="mp-badge multi">👥 MULTI</span>' :
     m === 'coop'  ? '<span class="mp-badge coop">🤝 CO-OP</span>' : ''
   ).join('');
-  const ribbon = g.tag ? `<div class="ribbon-anchor"><div class="corner-ribbon ${g.tag.toLowerCase()}">${g.tag}</div></div>` : '';
+  const ribbon = g.tag ? `<div class="corner-ribbon ${g.tag.toLowerCase()}">${g.tag}</div>` : '';
+  const indieTag = g.type === 'indie' ? '<span class="game-genre-indie">INDIE</span>' : '';
+  const removeBtn = xAction === 'unstar'
+    ? `<button class="remove-btn" data-name="${g.name}" onclick="toggleStar('${safeName}',this.parentElement.querySelector('.star-btn'))" title="Remove from starred">✕</button>`
+    : (!starred.has(g.name) ? `<button class="remove-btn" data-name="${g.name}" onclick="removeGame('${safeName}')" title="Hide this game">✕</button>` : '');
+
   card.innerHTML = `
-    <div class="game-info">
+    <div class="card-title-block">
       <div class="game-name" title="${g.name}">${g.name}</div>
-      <div class="game-genre">${g.genre}${g.type === 'indie' ? ' · <span style="color:#a855f7;font-size:10px">INDIE</span>' : ''}</div>
-      ${g.rating ? ratingHTML(g) : ''}
-      ${isClaimable ? '<div class="claim-notice">⚡ Free to claim — expires Mar 31</div>' : ''}
-      ${mpBadges ? `<div class="mp-row">${mpBadges}</div>` : ''}
+      <span class="game-genre">${g.genre}${g.type === 'indie' ? ' · <span class="game-genre-indie">INDIE</span>' : ''}</span>
     </div>
-    <a class="store-btn" href="${storeUrl(g.name)}" target="_blank" rel="noopener" title="View in Meta Horizon Store">
-      &#x1F6D2; <span>Store</span>
-    </a>
-    <button class="star-btn ${isStarred ? 'starred' : ''}" data-name="${g.name}"
-      onclick="toggleStar('${safeName}', this)"
-      title="${isStarred ? 'Unstar' : 'Star this game'}">&#11088;</button>
-    ${xAction === 'unstar' ? `<button class="remove-btn" data-name="${g.name}" onclick="toggleStar('${safeName}',this.previousElementSibling)" title="Remove from starred">✕</button>` : (!isStarred ? `<button class="remove-btn" data-name="${g.name}" onclick="removeGame('${safeName}')" title="Hide this game">✕</button>` : '')}
+    <div class="card-bottom-left">
+      ${g.rating ? ratingHTML(g) : ''}
+      <div class="card-tags-row">
+        ${isClaimable ? '<span class="claim-badge">⚡ FREE THIS MONTH</span>' : ''}
+        ${mpBadges}
+      </div>
+    </div>
+    <div class="card-bottom-center">
+      <a class="store-btn" href="${storeUrl(g.name)}" target="_blank" rel="noopener" title="View in Meta Horizon Store">
+        &#x1F6D2; <span>Store</span>
+      </a>
+      <button class="star-btn ${starred.has(g.name) ? 'starred' : ''}" data-name="${g.name}"
+        onclick="toggleStar('${safeName}', this)"
+        title="${starred.has(g.name) ? 'Unstar' : 'Star this game'}">&#11088;</button>
+      ${removeBtn}
+    </div>
     ${ribbon}
   `;
   return card;
