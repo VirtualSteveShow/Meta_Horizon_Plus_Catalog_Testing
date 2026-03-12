@@ -1004,6 +1004,24 @@
     position: relative;
     overflow: hidden;
   }
+  .monthly-card.has-art {
+    background-size: cover;
+    background-position: center;
+  }
+  .monthly-card.has-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.3) 0%,
+      rgba(0,0,0,0.1) 40%,
+      rgba(0,0,0,0.65) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+  .monthly-card.has-art > * { position: relative; z-index: 1; }
   .monthly-card::before {
     content: '';
     position: absolute;
@@ -3162,11 +3180,42 @@ const HERO_ART = {
   'Windlands 2':                           'hero_art/windlands-2.jpg',
 };
 
+// ── MONTHLY ART — separate files sized 600×340, suffix -monthly ──
+const HERO_ART_MONTHLY = {
+  'Arizona Sunshine Remake':        'hero_art/arizona-sunshine-remake-monthly.jpg',
+  'The Pirate: Republic of Nassau': 'hero_art/the-pirate-republic-of-nassau-monthly.jpg',
+};
+
+function applyMonthlyArt() {
+  document.querySelectorAll('.monthly-card').forEach(card => {
+    const titleEl = card.querySelector('.monthly-card-title');
+    if (!titleEl) return;
+    const name = titleEl.textContent.trim();
+    const src = HERO_ART_MONTHLY[name];
+    if (!src) return;
+    const img = new Image();
+    img.onload = () => {
+      card.style.backgroundImage = `url('${src}')`;
+      card.classList.add('has-art');
+    };
+    img.onerror = () => {
+      const alt = src.endsWith('.png') ? src.replace('.png','.jpg') : src.replace('.jpg','.png');
+      const img2 = new Image();
+      img2.onload = () => {
+        card.style.backgroundImage = `url('${alt}')`;
+        card.classList.add('has-art');
+      };
+      img2.src = alt;
+    };
+    img.src = src;
+  });
+}
+
 renderCatalog();
 renderStarred();
-
 renderRemovedPanel();
 updateRemovedBadge();
+applyMonthlyArt();
 // Apply starred state to monthly redeemable star buttons
 document.querySelectorAll('.monthly-card .star-btn').forEach(b => {
   if (starred.has(b.dataset.name)) b.classList.add('starred');
