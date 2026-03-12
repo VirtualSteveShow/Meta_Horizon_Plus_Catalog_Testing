@@ -745,6 +745,30 @@
     box-shadow: 0 0 0 2px rgba(245,158,11,0.3) !important;
   }
 
+  /* ── MOBILE DRAG HANDLE — center-right, between star and X ── */
+  .drag-handle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 32px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    letter-spacing: -1px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .drag-handle:active { color: var(--gold); background: rgba(245,158,11,0.15); }
+
   .game-grid {
     display: flex;
     flex-direction: column;
@@ -1427,6 +1451,7 @@
     .card-bottom-left { bottom: 16px; left: 16px; gap: 8px; }
     .card-bottom-center { bottom: 16px; gap: 14px; }
     .card-bottom-right { bottom: 16px; right: 16px; }
+    .drag-handle { display: none; }
     .mp-badge { font-size: 16px; padding: 5px 12px; }
     .claim-badge { font-size: 14px; padding: 5px 10px; }
     .game-rating .stars        { font-size: 18px; }
@@ -2424,6 +2449,12 @@ function renderStarred() {
     const card = makeCard(g, i, 'draggable-card', 'unstar');
     card.setAttribute('draggable', 'true');
     card.dataset.name = g.name;
+    // Inject mobile drag handle (hidden on PC via CSS)
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '&#8942;&#8942;';
+    handle.title = 'Drag to reorder';
+    card.appendChild(handle);
     grid.appendChild(card);
   });
   initDragAndDrop(grid);
@@ -2671,12 +2702,12 @@ function initDragAndDrop(grid) {
       }
     });
 
-    // ── TOUCH DRAG ──
-    // Track touch start to distinguish tap (buttons) from drag (card body)
-    let touchOriginWasButton = false;
+    // ── TOUCH DRAG — handle only (prevents scroll interference) ──
+    const handle = card.querySelector('.drag-handle');
+    let touchFromHandle = false;
     card.addEventListener('touchstart', e => {
-      touchOriginWasButton = !!e.target.closest('button, a');
-      if (touchOriginWasButton) return;
+      touchFromHandle = handle && (e.target === handle || handle.contains(e.target));
+      if (!touchFromHandle) return;
       touchDragEl = card;
       touchClone = card.cloneNode(true);
       touchClone.style.cssText = `position:fixed;z-index:9999;width:${card.offsetWidth}px;opacity:0.85;pointer-events:none;left:${card.getBoundingClientRect().left}px;top:${card.getBoundingClientRect().top}px;transition:none;`;
@@ -2685,7 +2716,7 @@ function initDragAndDrop(grid) {
     }, { passive: true });
 
     card.addEventListener('touchmove', e => {
-      if (!touchClone || touchOriginWasButton) return;
+      if (!touchClone || !touchFromHandle) return;
       e.preventDefault();
       const touch = e.touches[0];
       touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
@@ -2713,6 +2744,7 @@ function initDragAndDrop(grid) {
         saveStarredOrder(grid);
       }
       touchDragEl = null;
+      touchFromHandle = false;
     });
   });
 }
