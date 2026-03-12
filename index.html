@@ -815,13 +815,17 @@
   .game-card.monthly         { border-color: rgba(34,197,94,0.4); }
   .game-card.claimable       { border-color: rgba(34,197,94,0.5); border-left-color: #22c55e !important; }
 
-  /* ── TOP-LEFT: game name ── */
+  /* ── TOP-LEFT: game name + genre ── */
   .card-title-block {
     position: absolute;
     top: 10px;
     left: 12px;
     max-width: 65%;
     z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
   .game-name {
     display: inline-block;
