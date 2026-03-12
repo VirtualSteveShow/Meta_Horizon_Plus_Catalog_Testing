@@ -726,30 +726,23 @@
 
   /* ── GAME GRID ── */
   .draggable-card {
-    cursor: default;
-  }
-  .drag-handle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    min-width: 28px;
-    color: rgba(255,255,255,0.2);
-    font-size: 14px;
     cursor: grab;
-    touch-action: none;
-    user-select: none;
-    align-self: stretch;
-    padding: 0 2px;
-    letter-spacing: -2px;
   }
-  .drag-handle:active { cursor: grabbing; color: var(--gold); }
+  .draggable-card:active {
+    cursor: grabbing;
+  }
+  /* Buttons/links inside draggable cards keep default cursor */
+  .draggable-card button,
+  .draggable-card a {
+    cursor: pointer;
+  }
   .draggable-card.dragging {
     opacity: 0.4;
+    cursor: grabbing;
   }
   .draggable-card.drag-over {
     border-color: var(--gold) !important;
-    background: rgba(245,158,11,0.08) !important;
+    box-shadow: 0 0 0 2px rgba(245,158,11,0.3) !important;
   }
 
   .game-grid {
@@ -1516,7 +1509,7 @@
         <h3>⭐ Star a Game</h3>
         <p>Tap the <strong>⭐</strong> on any game to add it to your personal <strong>Starred Games List</strong> at the top of the page. Use this for games you want to try, revisit, or keep track of. Your stars are saved locally so they'll still be there next time you open the tool.</p>
         <p>To unstar a game, tap the <strong>⭐</strong> again from anywhere in the catalog, or tap the <strong>✕</strong> directly inside the Starred Games List — this removes it from the list without hiding it from the catalog.</p>
-        <p><strong>Reordering:</strong> Inside the Starred Games List, each card has a <strong>⋮⋮ grip handle</strong> on the left edge. Press and hold it to drag the card up or down into your preferred order. Your ranking is saved automatically and persists between sessions.</p>
+        <p><strong>Reordering:</strong> Inside the Starred Games List, drag any card by pressing on an empty area of the card (not a button) to reorder it. Your ranking is saved automatically and persists between sessions.</p>
         <p>The <strong>⭐ button</strong> in the top navigation bar jumps straight to your Starred Games List — it dims when your list is empty.</p>
       </div>
 
@@ -2426,14 +2419,8 @@ function renderStarred() {
   const matches = orderedNames.map(n => allData.find(g => g.name === n)).filter(Boolean);
   matches.forEach((g, i) => {
     const card = makeCard(g, i, 'draggable-card', 'unstar');
-    card.setAttribute('draggable', 'false'); // drag only from handle
+    card.setAttribute('draggable', 'true');
     card.dataset.name = g.name;
-    // Prepend drag handle
-    const handle = document.createElement('div');
-    handle.className = 'drag-handle';
-    handle.innerHTML = '&#8942;&#8942;'; // ⋮⋮ dots
-    handle.title = 'Drag to reorder';
-    card.insertBefore(handle, card.firstChild);
     grid.appendChild(card);
   });
   initDragAndDrop(grid);
@@ -2647,26 +2634,17 @@ function initDragAndDrop(grid) {
   let dragSrc = null;
   let touchDragEl = null;
   let touchClone = null;
-  let touchStartY = 0;
 
   // ── MOUSE DRAG ──
   grid.querySelectorAll('.draggable-card').forEach(card => {
-    const handle = card.querySelector('.drag-handle');
-    if (handle) {
-      handle.addEventListener('mousedown', () => {
-        card.setAttribute('draggable', 'true');
-      });
-    }
     card.addEventListener('dragstart', e => {
-      if (!card.getAttribute('draggable') || card.getAttribute('draggable') === 'false') {
-        e.preventDefault(); return;
-      }
+      // Cancel if drag originated from a button or link
+      if (e.target.closest('button, a')) { e.preventDefault(); return; }
       dragSrc = card;
       card.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
     card.addEventListener('dragend', () => {
-      card.setAttribute('draggable', 'false');
       card.classList.remove('dragging');
       grid.querySelectorAll('.draggable-card').forEach(c => c.classList.remove('drag-over'));
       saveStarredOrder(grid);
@@ -2691,22 +2669,23 @@ function initDragAndDrop(grid) {
     });
 
     // ── TOUCH DRAG ──
-    const th = card.querySelector('.drag-handle');
-    if (th) th.addEventListener('touchstart', e => {
+    // Track touch start to distinguish tap (buttons) from drag (card body)
+    let touchOriginWasButton = false;
+    card.addEventListener('touchstart', e => {
+      touchOriginWasButton = !!e.target.closest('button, a');
+      if (touchOriginWasButton) return;
       touchDragEl = card;
-      touchStartY = e.touches[0].clientY;
       touchClone = card.cloneNode(true);
-      touchClone.style.cssText = `position:fixed;z-index:9999;width:${card.offsetWidth}px;opacity:0.85;pointer-events:none;left:${card.getBoundingClientRect().left}px;top:${card.getBoundingClientRect().top}px;`;
+      touchClone.style.cssText = `position:fixed;z-index:9999;width:${card.offsetWidth}px;opacity:0.85;pointer-events:none;left:${card.getBoundingClientRect().left}px;top:${card.getBoundingClientRect().top}px;transition:none;`;
       document.body.appendChild(touchClone);
       card.classList.add('dragging');
     }, { passive: true });
 
-    if (th) th.addEventListener('touchmove', e => {
-      if (!touchClone) return;
+    card.addEventListener('touchmove', e => {
+      if (!touchClone || touchOriginWasButton) return;
       e.preventDefault();
       const touch = e.touches[0];
       touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
-      // Highlight card under finger
       touchClone.style.pointerEvents = 'none';
       const el = document.elementFromPoint(touch.clientX, touch.clientY);
       const target = el && el.closest('.draggable-card');
@@ -2714,7 +2693,7 @@ function initDragAndDrop(grid) {
       if (target && target !== touchDragEl) target.classList.add('drag-over');
     }, { passive: false });
 
-    if (th) th.addEventListener('touchend', e => {
+    card.addEventListener('touchend', e => {
       if (!touchClone || !touchDragEl) return;
       const touch = e.changedTouches[0];
       touchClone.remove(); touchClone = null;
