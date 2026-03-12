@@ -912,10 +912,17 @@
   .tag-new  { background: rgba(168,85,247,0.15);  color: #d8b4fe; border: 1px solid rgba(168,85,247,0.3); }
 
   /* ── CORNER RIBBON ── */
+  .ribbon-anchor {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
   .corner-ribbon {
     position: absolute;
-    bottom: -13px;
-    right: -13px;
     width: 90px;
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
@@ -923,10 +930,11 @@
     font-weight: 800;
     letter-spacing: 0.1em;
     padding: 3px 0;
+    /* center of ribbon sits W*0.354 from each edge */
+    bottom: 26px;
+    right: -26px;
     transform: rotate(-45deg);
     transform-origin: center center;
-    pointer-events: none;
-    z-index: 2;
   }
   .corner-ribbon.mar {
     background: rgba(239,68,68,0.85);
@@ -1366,8 +1374,8 @@
       width: 270px;
       font-size: 24px;
       padding: 9px 0;
-      bottom: -40px;
-      right: -40px;
+      bottom: 78px;
+      right: -78px;
       letter-spacing: 0.12em;
     }
   }
@@ -2263,7 +2271,7 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     m === 'multi' ? '<span class="mp-badge multi">👥 MULTI</span>' :
     m === 'coop'  ? '<span class="mp-badge coop">🤝 CO-OP</span>' : ''
   ).join('');
-  const ribbon = g.tag ? `<div class="corner-ribbon ${g.tag.toLowerCase()}">${g.tag}</div>` : '';
+  const ribbon = g.tag ? `<div class="ribbon-anchor"><div class="corner-ribbon ${g.tag.toLowerCase()}">${g.tag}</div></div>` : '';
   card.innerHTML = `
     <div class="game-info">
       <div class="game-name" title="${g.name}">${g.name}</div>
