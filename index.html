@@ -2358,6 +2358,10 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     <div class="card-title-block">
       <div class="game-name" title="${g.name}">${g.name}</div>
       <span class="game-genre">${g.genre}${g.type === 'indie' ? ' · <span class="game-genre-indie">INDIE</span>' : ''}</span>
+      ${mpBadges || isClaimable ? `<div class="card-tags-row">
+        ${isClaimable ? '<span class="claim-badge">⚡ FREE THIS MONTH</span>' : ''}
+        ${mpBadges}
+      </div>` : ''}
     </div>
     <div class="card-top-right">
       <button class="star-btn ${starred.has(g.name) ? 'starred' : ''}" data-name="${g.name}"
@@ -2366,10 +2370,6 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     </div>
     <div class="card-bottom-left">
       ${g.rating ? ratingHTML(g) : ''}
-      <div class="card-tags-row">
-        ${isClaimable ? '<span class="claim-badge">⚡ FREE THIS MONTH</span>' : ''}
-        ${mpBadges}
-      </div>
     </div>
     <div class="card-bottom-center">
       <a class="store-btn" href="${storeUrl(g.name)}" target="_blank" rel="noopener" title="View in Meta Horizon Store">
