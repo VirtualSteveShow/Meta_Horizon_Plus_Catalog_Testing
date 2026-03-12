@@ -815,18 +815,16 @@
   .game-card.monthly         { border-color: rgba(34,197,94,0.4); }
   .game-card.claimable       { border-color: rgba(34,197,94,0.5); border-left-color: #22c55e !important; }
 
-  /* ── TOP-LEFT: game name + genre ── */
+  /* ── TOP-LEFT: game name ── */
   .card-title-block {
     position: absolute;
     top: 10px;
     left: 12px;
     max-width: 65%;
     z-index: 2;
-    background: rgba(0,0,0,0.55);
-    border-radius: 6px;
-    padding: 5px 8px;
   }
   .game-name {
+    display: inline-block;
     font-size: 13px;
     font-weight: 600;
     color: #f1f5f9;
@@ -835,16 +833,30 @@
     white-space: normal;
     overflow-wrap: break-word;
     word-break: normal;
+    background: rgba(0,0,0,0.55);
+    border-radius: 5px;
+    padding: 4px 8px;
   }
   .game-genre {
+    display: inline-block;
     font-size: 10px;
     color: #94a3b8;
     font-weight: 300;
-    margin-top: 2px;
-    display: block;
+    margin-top: 4px;
+    background: rgba(0,0,0,0.45);
+    border-radius: 4px;
+    padding: 2px 7px;
   }
 
-  /* ── BOTTOM-LEFT: rating + tags ── */
+  /* ── TOP-RIGHT: star button ── */
+  .card-top-right {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 2;
+  }
+
+  /* ── BOTTOM-LEFT: rating + tags + X ── */
   .card-bottom-left {
     position: absolute;
     bottom: 10px;
@@ -862,7 +874,15 @@
     align-items: center;
   }
 
-  /* ── BOTTOM-CENTER: store, star, remove ── */
+  /* ── BOTTOM-RIGHT: X button ── */
+  .card-bottom-right {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    z-index: 2;
+  }
+
+  /* ── BOTTOM-CENTER: store only ── */
   .card-bottom-center {
     position: absolute;
     bottom: 10px;
@@ -1412,9 +1432,11 @@
     .game-card { height: 280px; }
     .filter-btn { font-size: 13px; padding: 8px 18px; }
     .section-search { font-size: 14px; }
-    .card-title-block { top: 16px; left: 16px; padding: 8px 12px; max-width: 55%; }
+    .card-title-block { top: 16px; left: 16px; max-width: 55%; }
+    .card-top-right   { top: 16px; right: 16px; }
     .card-bottom-left { bottom: 16px; left: 16px; gap: 6px; }
     .card-bottom-center { bottom: 16px; gap: 12px; }
+    .card-bottom-right { bottom: 16px; right: 16px; }
     .mp-badge { font-size: 12px; padding: 4px 10px; }
     .claim-badge { font-size: 11px; padding: 4px 8px; }
     /* ── PC LAYOUT ── */
@@ -2333,6 +2355,11 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
       <div class="game-name" title="${g.name}">${g.name}</div>
       <span class="game-genre">${g.genre}${g.type === 'indie' ? ' · <span class="game-genre-indie">INDIE</span>' : ''}</span>
     </div>
+    <div class="card-top-right">
+      <button class="star-btn ${starred.has(g.name) ? 'starred' : ''}" data-name="${g.name}"
+        onclick="toggleStar('${safeName}', this)"
+        title="${starred.has(g.name) ? 'Unstar' : 'Star this game'}">&#11088;</button>
+    </div>
     <div class="card-bottom-left">
       ${g.rating ? ratingHTML(g) : ''}
       <div class="card-tags-row">
@@ -2344,9 +2371,8 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
       <a class="store-btn" href="${storeUrl(g.name)}" target="_blank" rel="noopener" title="View in Meta Horizon Store">
         &#x1F6D2; <span>Store</span>
       </a>
-      <button class="star-btn ${starred.has(g.name) ? 'starred' : ''}" data-name="${g.name}"
-        onclick="toggleStar('${safeName}', this)"
-        title="${starred.has(g.name) ? 'Unstar' : 'Star this game'}">&#11088;</button>
+    </div>
+    <div class="card-bottom-right">
       ${removeBtn}
     </div>
     ${ribbon}
