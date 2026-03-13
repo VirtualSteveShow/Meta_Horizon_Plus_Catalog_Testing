@@ -340,6 +340,9 @@
     transition: background 0.2s, border-color 0.2s;
   }
   .options-btn:hover { background: rgba(14,165,233,0.25); border-color: var(--blue); }
+  /* Match options-btn appearance to top-nav-btn when help overlay is open */
+  .help-overlay.open ~ * .options-btn,
+  body.help-open .options-btn { opacity: 0.4; pointer-events: none; }
 
   .options-panel {
     position: fixed;
@@ -1596,7 +1599,8 @@
   <!-- TOP NAV BUTTONS GROUP -->
   <div class="top-nav-group">
     <button class="top-nav-btn trash-btn" onclick="navToRemoved()" title="View hidden games">🗑</button>
-    <button class="help-btn inline-help" onclick="toggleHelp()" title="How to use this tool">? How to Use</button>
+    <button class="top-nav-btn" onclick="navToCatalog()" title="Jump to catalog">📋</button>
+    <button class="help-btn inline-help" onclick="toggleHelp()" title="How to use this tool">?</button>
     <button class="top-nav-btn star-nav-btn" onclick="navToStarred()" title="View starred games">⭐</button>
   </div>
 
@@ -1844,7 +1848,7 @@
   <header class="header">
     <div class="show-label">⬡ Meta Horizon+ Full Games Catalog — March 2026</div>
     <h1>Meta Horizon+ Catalog</h1>
-    <div id="list-name-display" style="display:none;font-size:15px;font-weight:600;letter-spacing:0.04em;background:linear-gradient(135deg,#fff 30%,var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;"></div>
+    <div id="list-name-display" style="display:none;font-size:18px;font-weight:700;letter-spacing:0.02em;color:#f59e0b;margin-bottom:6px;text-shadow:0 0 20px rgba(245,158,11,0.3);"></div>
     <div class="header-sub">Complete game list · <span>March 2026</span> · <span id="header-total">107</span> titles · $7.99/mo · <span style="color:var(--green);font-weight:500;">First month free — cancel anytime</span></div>
     <div class="header-byline">A tool by <a href="https://www.youtube.com/@virtualsteven/streams" target="_blank" rel="noopener" style="color:#f59e0b;font-weight:700;text-decoration:none;">Virtual Steve</a></div>
     <div><span class="version-badge" onclick="toggleChangelog()" title="View patch notes">V 1.5</span></div>
@@ -2357,6 +2361,8 @@ function restoreGame(name) {
 }
 
 function restoreAll() {
+  if (removed.size === 0) return;
+  if (!confirm(`Restore all ${removed.size} hidden game${removed.size !== 1 ? 's' : ''} back to the catalog?`)) return;
   removed.clear();
   saveRemoved();
   reRenderAll();
@@ -2551,7 +2557,25 @@ function renderCatalog() {
   const frag = document.createDocumentFragment();
   filtered.forEach((g, i) => frag.appendChild(makeCard(g, i)));
   grid.innerHTML = '';
-  grid.appendChild(frag);
+  if (filtered.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--muted);font-size:14px;line-height:1.8;';
+    const activeFilters = [
+      f.cat !== 'all' && f.cat,
+      f.genre !== 'all' && f.genre,
+      f.mp !== 'all' && f.mp,
+      f.search && `"${f.search}"`,
+      f.minRating > 0 && `${f.minRating}★+`,
+      f.unstarred && 'Unstarred only',
+    ].filter(Boolean).join(', ');
+    empty.innerHTML = `<div style="font-size:28px;margin-bottom:12px;">🔍</div>
+      <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:8px;">No games match these filters</div>
+      <div>Active filters: <span style="color:var(--blue);">${activeFilters || 'none'}</span></div>
+      <div style="margin-top:16px;"><button onclick="resetAllFilters()" style="background:rgba(14,165,233,0.15);border:1px solid rgba(14,165,233,0.4);color:var(--blue);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">Clear All Filters</button></div>`;
+    grid.appendChild(empty);
+  } else {
+    grid.appendChild(frag);
+  }
   const countEl = document.getElementById('catalog-count');
   if (countEl) countEl.textContent = `${filtered.length} title${filtered.length !== 1 ? 's' : ''}`;
   updateResetBtn();
@@ -3016,6 +3040,17 @@ function navToRemoved() {
   setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
+function navToCatalog() {
+  const section = document.getElementById('sec-catalog');
+  if (!section) return;
+  const collapseBtn = document.getElementById('catalog-toggle-btn');
+  // Expand catalog if collapsed
+  if (collapseBtn && section.classList.contains('collapsed')) {
+    collapseBtn.click();
+  }
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+}
+
 function navToStarred() {
   const section = document.getElementById('sec-starred');
   if (!section.classList.contains('has-stars')) return;
@@ -3356,6 +3391,7 @@ function toggleChangelog() {
 function toggleHelp() {
   const overlay = document.getElementById('help-overlay');
   const isOpen = overlay.classList.toggle('open');
+  document.body.classList.toggle('help-open', isOpen);
   if (isOpen) {
     const scrollY = window.scrollY;
     document.body.style.position = 'fixed';
@@ -3513,7 +3549,7 @@ function updateListNameDisplay(name) {
   const el = document.getElementById('list-name-display');
   if (!el) return;
   if (name) {
-    el.textContent = name;
+    el.textContent = `"${name}"`;
     el.style.display = 'block';
   } else {
     el.style.display = 'none';
@@ -3570,6 +3606,13 @@ function checkForSharedList() {
     if (saveBtn) saveBtn.style.display = 'block';
     renderStarred();
     renderCatalog();
+    // Scroll to starred section so recipient sees the curated list immediately
+    setTimeout(() => {
+      const starredSec = document.getElementById('sec-starred');
+      if (starredSec && starred.size > 0) {
+        starredSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 400);
   } catch(e) {
     console.warn('Invalid shared list in URL', e);
   }
@@ -3614,7 +3657,7 @@ function showToast(msg) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'toast-msg';
-    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#0d1520;border:1px solid rgba(14,165,233,0.4);color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:13px;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,0.6);transition:opacity 0.3s;';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0d1a2e;border:1px solid rgba(14,165,233,0.6);color:#e2e8f0;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.8);transition:opacity 0.3s;white-space:nowrap;letter-spacing:0.02em;';
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
