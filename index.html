@@ -1836,20 +1836,6 @@
     </div><!-- end monthly-body -->
   </section>
 
-  <!-- REMOVED GAMES PANEL -->
-  <div class="removed-section" id="removed-section">
-    <div class="removed-header" onclick="collapseToggleRemoved()" style="cursor:pointer;">
-      <span class="removed-title">🗑 Hidden Games <span class="opt-count" id="removed-count-title">0 hidden</span></span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button class="opt-action-btn" onclick="event.stopPropagation();restoreAll()">↩ Restore All</button>
-        <button class="opt-action-btn" id="removed-toggle-btn" onclick="event.stopPropagation();collapseToggleRemoved()">▼ Show</button>
-      </div>
-    </div>
-    <div class="removed-body">
-      <div class="removed-grid" id="removed-grid" style="padding-top:10px;"></div>
-    </div>
-  </div>
-
   <!-- STARRED SECTION -->
   <section class="section starred-section" id="sec-starred">
     <div class="section-header sh-gold" onclick="toggleStarred()" style="cursor:pointer;user-select:none;">
@@ -1868,11 +1854,13 @@
 
   <!-- FULL CATALOG -->
   <section class="section" id="sec-catalog">
-    <div class="section-header sh-blue">
+    <div class="section-header sh-blue" onclick="toggleCatalog()" style="cursor:pointer;user-select:none;">
       <span class="section-icon">🎮</span>
       <span class="section-title">Full Catalog</span>
-      <span class="section-count" id="catalog-count"></span>
+      <span class="section-count" id="catalog-count" style="margin-left:auto;"></span>
+      <span id="catalog-chevron" style="margin-left:10px;font-size:13px;color:var(--muted);">▼</span>
     </div>
+    <div id="catalog-body">
     <div class="catalog-filter-sticky" id="catalog-filter-sticky">
       <div class="filter-bar" style="margin-bottom:6px;">
         <input type="text" id="catalog-search" placeholder="Search all games..." oninput="filterCatalog()">
@@ -1940,9 +1928,22 @@
       <div class="legend-item"><span class="tag tag-jan">JAN</span> Added January 2026</div>
     </div>
     <div class="game-grid" id="catalog-grid"></div>
+    </div><!-- end catalog-body -->
   </section>
 
-  <footer class="footer">
+  <!-- REMOVED GAMES PANEL -->
+  <div class="removed-section" id="removed-section">
+    <div class="removed-header" onclick="collapseToggleRemoved()" style="cursor:pointer;">
+      <span class="removed-title">🗑 Hidden Games <span class="opt-count" id="removed-count-title">0 hidden</span></span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="opt-action-btn" onclick="event.stopPropagation();restoreAll()">↩ Restore All</button>
+        <button class="opt-action-btn" id="removed-toggle-btn" onclick="event.stopPropagation();collapseToggleRemoved()">▼ Show</button>
+      </div>
+    </div>
+    <div class="removed-body">
+      <div class="removed-grid" id="removed-grid" style="padding-top:10px;"></div>
+    </div>
+  </div>
     <div class="footer-promo" id="vs-promo">
       <a href="https://www.youtube.com/@virtualsteven/streams" target="_blank" rel="noopener">
         ▶ This catalog was made by Virtual Steve — support his YouTube Channel by clicking here
@@ -3367,6 +3368,28 @@ function initMonthly() {
 }
 
 // ══════════════════════════════════════════════════════════
+// COLLAPSIBLE CATALOG SECTION
+// ══════════════════════════════════════════════════════════
+function toggleCatalog() {
+  const body    = document.getElementById('catalog-body');
+  const chevron = document.getElementById('catalog-chevron');
+  const sticky  = document.getElementById('catalog-filter-sticky');
+  const collapsed = body.style.display === 'none';
+  body.style.display = collapsed ? '' : 'none';
+  chevron.textContent = collapsed ? '▼' : '▶';
+  localStorage.setItem('mhplus_catalog_collapsed', collapsed ? '0' : '1');
+}
+
+function initCatalogCollapse() {
+  const collapsed = localStorage.getItem('mhplus_catalog_collapsed') === '1';
+  if (collapsed) {
+    const body    = document.getElementById('catalog-body');
+    const chevron = document.getElementById('catalog-chevron');
+    if (body)    body.style.display = 'none';
+    if (chevron) chevron.textContent = '▶';
+  }
+}
+
 // COLLAPSIBLE STARRED SECTION
 // ══════════════════════════════════════════════════════════
 function toggleStarred() {
@@ -3519,6 +3542,7 @@ function showToast(msg) {
 
 // ── V1.5 INIT ──
 initMonthly();
+initCatalogCollapse();
 initStarredCollapse();
 updateListNameDisplay(currentListName);
 checkForSharedList();
