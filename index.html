@@ -344,6 +344,50 @@
   .help-overlay.open ~ * .options-btn,
   body.help-open .options-btn { opacity: 0.4; pointer-events: none; }
 
+  /* ── UNDO TOAST ── */
+  #undo-toast {
+    position: fixed;
+    bottom: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d1a2e;
+    border: 1px solid rgba(239,68,68,0.5);
+    border-radius: 10px;
+    padding: 12px 18px;
+    z-index: 9999;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: calc(100vw - 32px);
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    white-space: nowrap;
+  }
+  #undo-toast.visible { opacity: 1; pointer-events: auto; }
+  #undo-toast .undo-msg { font-size: 14px; font-weight: 600; color: #fca5a5; }
+  #undo-toast .undo-btn {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid rgba(239,68,68,0.5);
+    color: #fca5a5;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  body.can-hover .undo-btn:hover { background: rgba(239,68,68,0.4); }
+  @media (min-width: 900px) {
+    #undo-toast { bottom: 60px; }
+    #undo-toast .undo-msg { font-size: 18px; }
+    #undo-toast .undo-btn { font-size: 16px; padding: 8px 20px; }
+  }
+
   .options-panel {
     position: fixed;
     top: 60px;
@@ -404,10 +448,9 @@
 
   /* ── REMOVED GAMES PANEL ── */
   .removed-section {
-    background: rgba(239,68,68,0.04);
-    border: 1px solid rgba(239,68,68,0.2);
-    border-radius: 10px;
-    padding: 20px;
+    background: transparent;
+    border: none;
+    padding: 0;
     margin-bottom: 32px;
     display: none;
   }
@@ -415,18 +458,27 @@
   .removed-section .removed-body {
     overflow: hidden;
     max-height: 0;
-    transition: max-height 0.3s ease;
+    transition: max-height 0.5s ease;
   }
   .removed-section.expanded .removed-body {
-    max-height: 2000px;
+    max-height: 99999px;
   }
   .removed-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    padding: 14px 16px;
+    margin-bottom: 0;
     flex-wrap: wrap;
     gap: 8px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 10px 10px 0 0;
+    border-bottom: none;
+  }
+  .removed-section:not(.expanded) .removed-header {
+    border-radius: 10px;
+    border-bottom: 1px solid rgba(239,68,68,0.25);
   }
   .removed-title {
     font-family: 'Rajdhani', sans-serif;
@@ -436,39 +488,24 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
+  /* Full-art hidden card grid */
   .removed-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .removed-card {
-    background: rgba(239,68,68,0.06);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px;
+    background: rgba(239,68,68,0.04);
     border: 1px solid rgba(239,68,68,0.2);
-    border-left: 3px solid rgba(239,68,68,0.5);
-    border-radius: 8px;
-    padding: 11px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 56px;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
   }
-  .removed-info { flex: 1; min-width: 0; }
-  .removed-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fca5a5;
-    word-break: normal;
-    overflow-wrap: break-word;
-    line-height: 1.3;
-  }
-  .removed-genre {
-    font-size: 11px;
-    color: rgba(252,165,165,0.5);
-    margin-top: 1px;
+  /* Red tint overlay on hidden cards */
+  .game-card.hidden-card::after {
+    background: linear-gradient(rgba(120,0,0,0.28) 0%, rgba(60,0,0,0.10) 45%, rgba(120,0,0,0.48) 100%) !important;
   }
   .restore-btn {
-    background: transparent;
-    border: 1px solid rgba(239,68,68,0.35);
+    background: rgba(239,68,68,0.18);
+    border: 1px solid rgba(239,68,68,0.5);
     color: #fca5a5;
     font-size: 11px;
     padding: 5px 10px;
@@ -477,8 +514,9 @@
     white-space: nowrap;
     transition: all 0.15s;
     flex-shrink: 0;
+    font-family: inherit;
   }
-  .restore-btn:hover { background: rgba(239,68,68,0.15); border-color: #ef4444; }
+  body.can-hover .restore-btn:hover { background: rgba(239,68,68,0.35); border-color: #ef4444; color: #fff; }
 
   /* ── GENRE BORDER COLORS ── */
   .game-card[data-genre-group="Shooter"]    { border-left-color: #ef4444; }
@@ -1815,6 +1853,12 @@
   </div>
 
   <!-- OPTIONS BUTTON + PANEL (top-left) -->
+  <!-- UNDO TOAST -->
+  <div id="undo-toast">
+    <span class="undo-msg" id="undo-toast-msg"></span>
+    <button class="undo-btn" onclick="undoLastRemove()">Undo</button>
+  </div>
+
   <button class="options-btn" id="opt-btn" onclick="toggleOptions()" title="Options">☰</button>
   <div class="options-panel" id="options-panel">
     <h3>⚙ Options</h3>
@@ -2367,6 +2411,7 @@ function removeGame(name) {
       reRenderAll();
       renderRemovedPanel();
       updateRemovedBadge();
+      showUndoToast(name);
     });
   }
   if (targetCard) {
@@ -2417,22 +2462,23 @@ function renderRemovedPanel() {
   grid.innerHTML = '';
   [...removed].sort().forEach(name => {
     const g = allData.find(x => x.name === name);
-    const genre = g ? g.genre : '';
-    const isIndie = g && g.type === 'indie';
-    const safeName = name.replace(/'/g, "\\'");
-    const card = document.createElement('div');
-    card.className = 'removed-card';
-    card.innerHTML = `
-      <div class="removed-info">
-        <div class="removed-name">${name}</div>
-        <div class="removed-genre">${genre}${isIndie ? ' · <span style="color:rgba(168,85,247,0.6);font-size:10px">INDIE</span>' : ''}</div>
-      </div>
-      <a class="store-btn" href="${storeUrl(name)}" target="_blank" rel="noopener" style="opacity:0.6;" title="View in Meta Horizon Store">&#x1F6D2; <span>Store</span></a>
-      <button class="restore-btn" onclick="restoreGame('${safeName}')">↩ Restore</button>
-    `;
-    grid.appendChild(card);
+    if (g) {
+      const card = makeCard(g, 0, 'hidden-card', 'restore');
+      const topRight = card.querySelector('.card-top-right');
+      if (topRight) topRight.style.display = 'none';
+      grid.appendChild(card);
+    } else {
+      const safeName = name.replace(/'/g, "\\'");
+      const card = document.createElement('div');
+      card.className = 'game-card hidden-card';
+      card.style.cssText = 'position:relative;height:130px;display:flex;align-items:flex-end;padding:10px 12px;gap:8px;';
+      card.innerHTML = `<div style="flex:1;font-size:13px;font-weight:600;color:#fca5a5;">${name}</div>
+        <button class="restore-btn" onclick="restoreGame('${safeName}')">&#x21A9; Restore</button>`;
+      grid.appendChild(card);
+    }
   });
 }
+
 
 function collapseToggleRemoved() {
   const section = document.getElementById('removed-section');
@@ -2545,6 +2591,8 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     <div class="card-bottom-right">
       ${xAction === 'unstar'
         ? `<button class="remove-btn" data-name="${g.name}" onclick="toggleStar('${safeName}',this.closest('.game-card').querySelector('.star-btn'))" title="Remove from starred">✕</button>`
+        : xAction === 'restore'
+        ? `<button class="restore-btn" data-name="${g.name}" onclick="restoreGame('${safeName}')" title="Restore to catalog">&#x21A9; Restore</button>`
         : (!starred.has(g.name) ? `<button class="remove-btn" data-name="${g.name}" onclick="removeGame('${safeName}')" title="Hide this game">✕</button>` : '')}
     </div>
   `;
@@ -3716,6 +3764,36 @@ function confirmSaveImport() {
 // ══════════════════════════════════════════════════════════
 // TOAST NOTIFICATION
 // ══════════════════════════════════════════════════════════
+let _lastRemovedName = null;
+
+function showUndoToast(gameName) {
+  _lastRemovedName = gameName;
+  const toast = document.getElementById('undo-toast');
+  const msg   = document.getElementById('undo-toast-msg');
+  if (!toast || !msg) return;
+  msg.textContent = 'Hidden: ' + gameName;
+  toast.classList.add('visible');
+  clearTimeout(toast._undoTimer);
+  toast._undoTimer = setTimeout(() => {
+    toast.classList.remove('visible');
+    _lastRemovedName = null;
+  }, 4000);
+}
+
+function undoLastRemove() {
+  const toast = document.getElementById('undo-toast');
+  if (toast) {
+    clearTimeout(toast._undoTimer);
+    toast.classList.remove('visible');
+  }
+  if (_lastRemovedName) {
+    const name = _lastRemovedName;
+    _lastRemovedName = null;
+    restoreGame(name);
+    showToast(name + ' restored');
+  }
+}
+
 function showToast(msg) {
   let toast = document.getElementById('toast-msg');
   if (!toast) {
