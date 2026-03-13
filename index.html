@@ -1565,6 +1565,8 @@
     .card-bottom-center { bottom: 16px; gap: 14px; }
     .card-bottom-right { bottom: 16px; right: 16px; }
     .drag-handle { display: none; }
+    #toast-msg { font-size: 22px !important; padding: 20px 40px !important; bottom: 60px !important; border-radius: 12px !important; }
+    #list-name-display { font-size: 36px !important; }
     .mp-badge { font-size: 16px; padding: 5px 12px; }
     .claim-badge { font-size: 14px; padding: 5px 10px; }
     .tag-mar-inline, .tag-jan-inline { font-size: 13px; padding: 4px 9px; }
@@ -1598,10 +1600,10 @@
   <!-- HELP BUTTON (top-center) -->
   <!-- TOP NAV BUTTONS GROUP -->
   <div class="top-nav-group">
-    <button class="top-nav-btn trash-btn" onclick="navToRemoved()" title="View hidden games">🗑</button>
-    <button class="top-nav-btn" onclick="navToCatalog()" title="Jump to catalog">📋</button>
-    <button class="help-btn inline-help" onclick="toggleHelp()" title="How to use this tool">?</button>
     <button class="top-nav-btn star-nav-btn" onclick="navToStarred()" title="View starred games">⭐</button>
+    <button class="top-nav-btn" onclick="navToCatalog()" title="Jump to catalog">📋</button>
+    <button class="top-nav-btn trash-btn" onclick="navToRemoved()" title="View hidden games">🗑</button>
+    <button class="help-btn inline-help" onclick="toggleHelp()" title="How to use this tool">?</button>
   </div>
 
   <!-- IMPORT CONFIRM MODAL -->
@@ -3606,10 +3608,18 @@ function checkForSharedList() {
     if (saveBtn) saveBtn.style.display = 'block';
     renderStarred();
     renderCatalog();
-    // Scroll to starred section so recipient sees the curated list immediately
+    // Force-expand starred section and scroll to it
     setTimeout(() => {
       const starredSec = document.getElementById('sec-starred');
       if (starredSec && starred.size > 0) {
+        // Expand if collapsed
+        const body = document.getElementById('starred-body');
+        const chevron = document.getElementById('starred-chevron');
+        if (body && body.style.display === 'none') {
+          body.style.display = '';
+          if (chevron) chevron.textContent = '▼';
+          localStorage.setItem('mhplus_starred_collapsed', '0');
+        }
         starredSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 400);
@@ -3657,7 +3667,7 @@ function showToast(msg) {
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'toast-msg';
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#0d1a2e;border:1px solid rgba(14,165,233,0.6);color:#e2e8f0;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.8);transition:opacity 0.3s;white-space:nowrap;letter-spacing:0.02em;';
+    toast.style.cssText = 'position:fixed;bottom:160px;left:50%;transform:translateX(-50%);background:#0d1a2e;border:1px solid rgba(14,165,233,0.6);color:#e2e8f0;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.8);transition:opacity 0.3s;white-space:nowrap;letter-spacing:0.02em;max-width:calc(100vw - 32px);text-align:center;box-sizing:border-box;';
     document.body.appendChild(toast);
   }
   toast.textContent = msg;
