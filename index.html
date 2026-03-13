@@ -3,8 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<!-- ── DESCRIPTION ── -->
+<meta name="description" content="Meta Horizon+ Full Game Catalog — browse, filter, star, and track all 109 games in the Meta Horizon+ VR subscription. Updated March 2026.">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- ── THEME COLOR (tints Android Chrome address bar) ── -->
+<meta name="theme-color" content="#080e18">
+
+<!-- ── OPEN GRAPH (link previews on Discord, iMessage, etc.) ── -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="Meta Horizon+ Catalog">
+<meta property="og:title"       content="Meta Horizon+ Full Catalog — March 2026">
+<meta property="og:description" content="Browse all 109 games in the Meta Horizon+ VR subscription. Filter by genre, rating, multiplayer, and more.">
+<meta property="og:image"       content="https://virtualsteveshow.github.io/Meta_Horizon_Plus_Catalog_Testing/og_image.jpg">
+<meta property="og:url"         content="https://virtualsteveshow.github.io/Meta_Horizon_Plus_Catalog_Testing/">
+
+<!-- ── FAVICON PLACEHOLDER — replace favicon.ico with your custom art ── -->
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<!-- Fallback inline favicon until custom one is ready -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23080e18'/><text x='16' y='22' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='16' fill='%230ea5e9'>H+</text></svg>">
+
+<!-- ── PWA MANIFEST (Android — Add to Home Screen) ── -->
+<link rel="manifest" href="data:application/manifest+json,{
+  &quot;name&quot;: &quot;Meta Horizon+ Catalog&quot;,
+  &quot;short_name&quot;: &quot;Horizon+&quot;,
+  &quot;description&quot;: &quot;Browse and track all games in the Meta Horizon+ VR subscription&quot;,
+  &quot;start_url&quot;: &quot;.&quot;,
+  &quot;display&quot;: &quot;standalone&quot;,
+  &quot;background_color&quot;: &quot;%23080e18&quot;,
+  &quot;theme_color&quot;: &quot;%23080e18&quot;,
+  &quot;orientation&quot;: &quot;portrait&quot;,
+  &quot;icons&quot;: [
+    {
+      &quot;src&quot;: &quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%23080e18'/><text x='96' y='130' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='100' fill='%230ea5e9'>H+</text></svg>&quot;,
+      &quot;sizes&quot;: &quot;192x192&quot;,
+      &quot;type&quot;: &quot;image/svg+xml&quot;,
+      &quot;purpose&quot;: &quot;any maskable&quot;
+    }
+  ]
+}">
+
 <title>Meta Horizon+ Full Catalog — March 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -3588,6 +3629,99 @@ initCatalogCollapse();
 initStarredCollapse();
 updateListNameDisplay(currentListName);
 checkForSharedList();
+
+// ── OG IMAGE GENERATOR ──
+// Generates a branded 1200×630 preview image for link sharing.
+// To update: open DevTools console and run generateOgImage() to download og_image.jpg
+function generateOgImage(download = false) {
+  const c = document.createElement('canvas');
+  c.width = 1200; c.height = 630;
+  const ctx = c.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#080e18';
+  ctx.fillRect(0, 0, 1200, 630);
+
+  // Grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1200; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,630); ctx.stroke(); }
+  for (let y = 0; y < 630; y += 40)  { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1200,y); ctx.stroke(); }
+
+  // Blue accent bar left
+  ctx.fillStyle = '#0ea5e9';
+  ctx.fillRect(0, 0, 6, 630);
+
+  // Glow behind title
+  const grd = ctx.createRadialGradient(600, 280, 0, 600, 280, 420);
+  grd.addColorStop(0, 'rgba(14,165,233,0.12)');
+  grd.addColorStop(1, 'rgba(14,165,233,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, 1200, 630);
+
+  // Top label
+  ctx.fillStyle = 'rgba(14,165,233,0.15)';
+  ctx.beginPath(); ctx.roundRect(60, 80, 260, 38, 6); ctx.fill();
+  ctx.strokeStyle = 'rgba(14,165,233,0.4)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(60, 80, 260, 38, 6); ctx.stroke();
+  ctx.fillStyle = '#0ea5e9';
+  ctx.font = 'bold 14px monospace';
+  ctx.letterSpacing = '3px';
+  ctx.fillText('META HORIZON+', 80, 105);
+
+  // Main title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 72px sans-serif';
+  ctx.letterSpacing = '-1px';
+  ctx.fillText('Full Game', 60, 220);
+  ctx.fillText('Catalog', 60, 305);
+
+  // Subtitle
+  ctx.fillStyle = '#64748b';
+  ctx.font = '22px monospace';
+  ctx.letterSpacing = '1px';
+  ctx.fillText('109 games · March 2026 · Filter · Star · Track', 60, 370);
+
+  // Bottom tag row
+  const tags = [
+    { label: '🎮 Main Catalog', color: '#0ea5e9', bg: 'rgba(14,165,233,0.12)' },
+    { label: '🎲 Indie Catalog', color: '#a855f7', bg: 'rgba(168,85,247,0.12)' },
+    { label: '🎁 Free Monthly', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  ];
+  let tx = 60;
+  tags.forEach(t => {
+    ctx.fillStyle = t.bg;
+    ctx.beginPath(); ctx.roundRect(tx, 430, 220, 42, 6); ctx.fill();
+    ctx.strokeStyle = t.color + '66'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(tx, 430, 220, 42, 6); ctx.stroke();
+    ctx.fillStyle = t.color;
+    ctx.font = 'bold 15px monospace';
+    ctx.letterSpacing = '0px';
+    ctx.fillText(t.label, tx + 14, 458);
+    tx += 238;
+  });
+
+  // Virtual Steve credit
+  ctx.fillStyle = 'rgba(245,158,11,0.7)';
+  ctx.font = '13px monospace';
+  ctx.fillText('by Virtual Steve', 60, 560);
+
+  // Right side decoration — large H+
+  ctx.fillStyle = 'rgba(14,165,233,0.06)';
+  ctx.font = 'bold 380px monospace';
+  ctx.fillText('H+', 680, 520);
+
+  if (download) {
+    const a = document.createElement('a');
+    a.href = c.toDataURL('image/jpeg', 0.92);
+    a.download = 'og_image.jpg';
+    a.click();
+    console.log('✓ og_image.jpg downloaded — upload to repo root alongside index.html');
+  }
+  return c.toDataURL('image/jpeg', 0.92);
+}
+console.log('%c[Horizon+ Catalog] Run generateOgImage(true) to download og_image.jpg for your repo', 'color:#0ea5e9;font-weight:bold');
+
 </script>
 <script data-goatcounter="https://virtualsteve.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
