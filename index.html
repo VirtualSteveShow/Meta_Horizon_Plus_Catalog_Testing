@@ -3574,6 +3574,8 @@ function promptListName() {
   const input   = document.getElementById('list-name-input');
   const counter = document.getElementById('list-name-char-count');
   if (!overlay || !input) return;
+  // Close the options panel first
+  document.getElementById('options-panel').classList.remove('open');
   input.value = currentListName || '';
   if (counter) counter.textContent = `${input.value.length} / 60`;
   input.oninput = () => { if (counter) counter.textContent = `${input.value.length} / 60`; };
