@@ -538,9 +538,8 @@
 
   /* ── REMOVE ANIMATION ── */
   @keyframes slideOut {
-    0%   { opacity: 1; transform: translateX(0); max-height: 100px; }
-    40%  { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.6); transform: translateX(0); }
-    100% { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0; }
+    0%   { opacity: 1; transform: translateX(0); max-height: 300px; }
+    100% { opacity: 0; transform: translateX(32px); max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0; }
   }
   .game-card.removing {
     animation: slideOut 0.35s ease forwards;
@@ -1627,6 +1626,26 @@
   </div>
 
   <!-- HELP MODAL -->
+  <!-- LIST NAME MODAL -->
+  <div class="help-overlay" id="list-name-overlay" onclick="if(event.target===this)closeListNameModal()" style="display:none;">
+    <div class="help-modal" style="max-width:420px;">
+      <h3 style="margin-bottom:16px;">✏️ Name Your List</h3>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Give your list a custom name — shown under the page title and included when you share your list.</p>
+      <input id="list-name-input" type="text" placeholder="e.g. My VR Wishlist"
+        maxlength="60"
+        style="width:100%;box-sizing:border-box;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.4);color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:6px;outline:none;"
+        onkeydown="if(event.key==='Enter')confirmListName();if(event.key==='Escape')closeListNameModal()">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;text-align:right;" id="list-name-char-count">0 / 60</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeListNameModal()" style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-size:13px;">Cancel</button>
+        <button onclick="confirmListName()" style="flex:1;padding:10px;background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.5);color:var(--blue);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">Save Name</button>
+      </div>
+      <div style="margin-top:12px;text-align:center;">
+        <button onclick="clearListName()" style="background:none;border:none;color:rgba(239,68,68,0.6);font-size:12px;cursor:pointer;font-family:inherit;">✕ Remove name</button>
+      </div>
+    </div>
+  </div>
+
   <div class="help-overlay" id="help-overlay" onclick="if(event.target===this)toggleHelp()">
     <div class="help-modal">
       <div class="help-modal-header">
@@ -2202,7 +2221,7 @@ function clearAllStars() {
 }
 
 // ── FILTERS ──
-let catalogFilter = { search: '', cat: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
+let catalogFilter = { search: '', cat: 'all', catType: 'all', catTag: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
 let starredSearch = '';
 let starredOrder = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); // manual sort order
 
@@ -2331,7 +2350,6 @@ function saveRemoved() {
 }
 
 function removeGame(name) {
-  // Find the card in the DOM and animate it out first
   const allCards = document.querySelectorAll('.game-card');
   let targetCard = null;
   allCards.forEach(c => {
@@ -2342,9 +2360,14 @@ function removeGame(name) {
     removed.add(name);
     if (starred.has(name)) { starred.delete(name); saveStarred(); }
     saveRemoved();
-    reRenderAll();
-    renderRemovedPanel();
-    updateRemovedBadge();
+    // Remove the card from DOM directly — avoids full grid re-render flash
+    if (targetCard && targetCard.parentNode) targetCard.parentNode.removeChild(targetCard);
+    // Defer full re-render to next frame so removal is visually done first
+    requestAnimationFrame(() => {
+      reRenderAll();
+      renderRemovedPanel();
+      updateRemovedBadge();
+    });
   }
   if (targetCard) {
     targetCard.classList.add('removing');
@@ -2544,9 +2567,9 @@ function renderCatalog() {
   let filtered = allData.filter(g => {
     if (removed.has(g.name)) return false;
     const matchSearch  = !s || g.name.toLowerCase().includes(s) || g.genre.toLowerCase().includes(s);
-    const matchCat     = f.cat === 'all' || f.cat === g.type ||
-                         (f.cat === 'MAR' && g.tag === 'MAR') ||
-                         (f.cat === 'JAN' && g.tag === 'JAN');
+    const matchCatType = f.catType === 'all' || f.catType === g.type;
+    const matchCatTag  = f.catTag === 'all' || g.tag === f.catTag;
+    const matchCat     = matchCatType && matchCatTag;
     const matchUnstarred = !f.unstarred || !starred.has(g.name);
     const matchGenre   = f.genre === 'all' || genreGroup(g.genre) === f.genre;
     const matchMp      = f.mp === 'all' || (g.mp||[]).includes(f.mp);
@@ -2563,7 +2586,8 @@ function renderCatalog() {
     const empty = document.createElement('div');
     empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--muted);font-size:14px;line-height:1.8;';
     const activeFilters = [
-      f.cat !== 'all' && f.cat,
+      f.catType !== 'all' && f.catType,
+      f.catTag  !== 'all' && f.catTag,
       f.genre !== 'all' && f.genre,
       f.mp !== 'all' && f.mp,
       f.search && `"${f.search}"`,
@@ -2938,16 +2962,23 @@ function setCatalogFilter(key, val, btn) {
   const sec = document.getElementById('sec-catalog');
 
   if (key === 'cat') {
-    // All cat buttons are now toggleable — clicking active one reverts to 'all'
-    if (btn.classList.contains('active')) {
-      sec.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.blur(); });
-      catalogFilter.cat = 'all';
-      btn.blur();
-    } else {
-      sec.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.blur(); });
-      btn.classList.add('active');
-      catalogFilter.cat = val;
+    const isType = val === 'games' || val === 'indie';
+    const isTag  = val === 'MAR' || val === 'JAN';
+    const isActive = btn.classList.contains('active');
+    if (isType) {
+      // Toggle type filter; leave tag filter alone
+      sec.querySelectorAll('.cat-filter-btn[data-cat="games"],.cat-filter-btn[data-cat="indie"]').forEach(b => { b.classList.remove('active'); b.blur(); });
+      catalogFilter.catType = isActive ? 'all' : val;
+      if (!isActive) btn.classList.add('active');
+    } else if (isTag) {
+      // Toggle tag filter; leave type filter alone
+      sec.querySelectorAll('.cat-filter-btn[data-cat="MAR"],.cat-filter-btn[data-cat="JAN"]').forEach(b => { b.classList.remove('active'); b.blur(); });
+      catalogFilter.catTag = isActive ? 'all' : val;
+      if (!isActive) btn.classList.add('active');
     }
+    catalogFilter.cat = catalogFilter.catType !== 'all' ? catalogFilter.catType :
+                        catalogFilter.catTag  !== 'all' ? catalogFilter.catTag : 'all';
+    btn.blur();
   } else if (key === 'mp') {
     if (btn.classList.contains('active')) {
       // Turn off — remove active, no highlight remains
@@ -2969,7 +3000,8 @@ function setCatalogFilter(key, val, btn) {
 }
 
 function isAnyFilterActive() {
-  return catalogFilter.cat !== 'all' ||
+  return catalogFilter.catType !== 'all' ||
+         catalogFilter.catTag !== 'all' ||
          catalogFilter.genre !== 'all' ||
          catalogFilter.mp !== 'all' ||
          catalogFilter.sort !== 'az' ||
@@ -2993,7 +3025,7 @@ function updateResetBtn() {
 }
 
 function resetAllFilters() {
-  catalogFilter = { search: '', cat: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
+  catalogFilter = { search: '', cat: 'all', catType: 'all', catTag: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
   // Reset search
   document.getElementById('catalog-search').value = '';
   // Reset cat buttons
@@ -3045,10 +3077,13 @@ function navToRemoved() {
 function navToCatalog() {
   const section = document.getElementById('sec-catalog');
   if (!section) return;
-  const collapseBtn = document.getElementById('catalog-toggle-btn');
-  // Expand catalog if collapsed
-  if (collapseBtn && section.classList.contains('collapsed')) {
-    collapseBtn.click();
+  // Expand if collapsed (catalog uses display:none on catalog-body)
+  const body    = document.getElementById('catalog-body');
+  const chevron = document.getElementById('catalog-chevron');
+  if (body && body.style.display === 'none') {
+    body.style.display = '';
+    if (chevron) chevron.textContent = '▼';
+    localStorage.setItem('mhplus_catalog_collapsed', '0');
   }
   setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
@@ -3056,6 +3091,14 @@ function navToCatalog() {
 function navToStarred() {
   const section = document.getElementById('sec-starred');
   if (!section.classList.contains('has-stars')) return;
+  // Expand if collapsed
+  const body    = document.getElementById('starred-body');
+  const chevron = document.getElementById('starred-chevron');
+  if (body && body.style.display === 'none') {
+    body.style.display = '';
+    if (chevron) chevron.textContent = '▼';
+    localStorage.setItem('mhplus_starred_collapsed', '0');
+  }
   setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
 }
 
@@ -3074,8 +3117,10 @@ function syncMenuFilters() {
   document.querySelectorAll('.menu-cat-btn[data-cat]').forEach(b => {
     if (b.dataset.cat === 'UNSTARRED') {
       b.classList.toggle('active', catalogFilter.unstarred);
-    } else {
-      b.classList.toggle('active', b.dataset.cat === catalogFilter.cat);
+    } else if (b.dataset.cat === 'games' || b.dataset.cat === 'indie') {
+      b.classList.toggle('active', b.dataset.cat === catalogFilter.catType);
+    } else if (b.dataset.cat === 'MAR' || b.dataset.cat === 'JAN') {
+      b.classList.toggle('active', b.dataset.cat === catalogFilter.catTag);
     }
   });
   // Sync mp button label
@@ -3107,24 +3152,10 @@ function menuSetCat(val, btn) {
     setCatalogFilter('cat', 'UNSTARRED', btn);
     return;
   }
+  // Delegate to main filter function — it handles the type/tag split correctly
   const sec = document.getElementById('sec-catalog');
-  // Mirror setCatalogFilter cat logic
-  if (btn.classList.contains('active')) {
-    document.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.blur(); });
-  catalogFilter.unstarred = false;
-    document.querySelectorAll('.menu-cat-btn[data-cat]').forEach(b => b.classList.remove('active'));
-    catalogFilter.cat = 'all';
-  } else {
-    document.querySelectorAll('.cat-filter-btn').forEach(b => { b.classList.remove('active'); b.blur(); });
-    document.querySelectorAll('.menu-cat-btn[data-cat]').forEach(b => b.classList.remove('active'));
-    // Activate matching main button
-    const mainBtn = sec.querySelector(`.cat-filter-btn[data-cat="${val}"]`);
-    if (mainBtn) mainBtn.classList.add('active');
-    btn.classList.add('active');
-    catalogFilter.cat = val;
-  }
-  btn.blur();
-  renderCatalog();
+  const mainBtn = sec ? sec.querySelector(`.cat-filter-btn[data-cat="${val}"]`) : null;
+  setCatalogFilter('cat', val, mainBtn || btn);
   syncMenuFilters();
 }
 
@@ -3539,12 +3570,33 @@ const LIST_NAME_KEY = 'mhplus_list_name';
 let currentListName = localStorage.getItem(LIST_NAME_KEY) || '';
 
 function promptListName() {
-  const current = currentListName || '';
-  const name = window.prompt('Name your list (shown under the title):', current);
-  if (name === null) return; // cancelled
-  currentListName = name.trim();
+  const overlay = document.getElementById('list-name-overlay');
+  const input   = document.getElementById('list-name-input');
+  const counter = document.getElementById('list-name-char-count');
+  if (!overlay || !input) return;
+  input.value = currentListName || '';
+  if (counter) counter.textContent = `${input.value.length} / 60`;
+  input.oninput = () => { if (counter) counter.textContent = `${input.value.length} / 60`; };
+  overlay.style.display = 'flex';
+  setTimeout(() => input.focus(), 50);
+}
+function confirmListName() {
+  const input = document.getElementById('list-name-input');
+  if (!input) return;
+  currentListName = input.value.trim();
   localStorage.setItem(LIST_NAME_KEY, currentListName);
   updateListNameDisplay(currentListName);
+  closeListNameModal();
+}
+function clearListName() {
+  currentListName = '';
+  localStorage.removeItem(LIST_NAME_KEY);
+  updateListNameDisplay('');
+  closeListNameModal();
+}
+function closeListNameModal() {
+  const overlay = document.getElementById('list-name-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 function updateListNameDisplay(name) {
