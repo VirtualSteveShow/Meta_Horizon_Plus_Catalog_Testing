@@ -1671,15 +1671,15 @@
       <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Give your list a custom name — shown under the page title and included when you share your list.</p>
       <input id="list-name-input" type="text" placeholder="e.g. My VR Wishlist"
         maxlength="60"
-        style="width:100%;box-sizing:border-box;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.4);color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:6px;outline:none;"
+        style="width:100%;box-sizing:border-box;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.4);color:#e2e8f0;padding:14px 16px;border-radius:8px;font-size:16px;font-family:inherit;margin-bottom:8px;outline:none;letter-spacing:0.02em;"
         onkeydown="if(event.key==='Enter')confirmListName();if(event.key==='Escape')closeListNameModal()">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;text-align:right;" id="list-name-char-count">0 / 60</div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="closeListNameModal()" style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-size:13px;">Cancel</button>
-        <button onclick="confirmListName()" style="flex:1;padding:10px;background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.5);color:var(--blue);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">Save Name</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:right;" id="list-name-char-count">0 / 60</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <button onclick="closeListNameModal()" style="flex:1;padding:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">Cancel</button>
+        <button onclick="confirmListName()" style="flex:1;padding:14px;background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.5);color:var(--blue);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;">Save Name</button>
       </div>
-      <div style="margin-top:12px;text-align:center;">
-        <button onclick="clearListName()" style="background:none;border:none;color:rgba(239,68,68,0.6);font-size:12px;cursor:pointer;font-family:inherit;">✕ Remove name</button>
+      <div style="text-align:center;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);">
+        <button onclick="clearListName()" style="background:none;border:none;color:rgba(239,68,68,0.6);font-size:13px;cursor:pointer;font-family:inherit;padding:8px 0;">✕ Remove name</button>
       </div>
     </div>
   </div>
