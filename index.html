@@ -1179,6 +1179,34 @@
     line-height: 1.5;
     display: block;
   }
+  .footer-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 10px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+  .footer-meta-sep { color: var(--border); }
+  .footer-meta-item { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .footer-meta-label {
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    font-size: 9px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+  .footer-meta-value { color: var(--muted); font-weight: 300; }
+  .footer-meta-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+  .footer-meta-link:hover { color: #fff; }
 
   /* ── LEGEND ── */
   .reset-filters-btn {
@@ -1949,9 +1977,23 @@
         ▶ This catalog was made by Virtual Steve — support his YouTube Channel by clicking here
       </a>
     </div>
-    <div>109 games · Updated March 4, 2026</div>
-    <div>Source: <a href="https://www.uploadvr.com/horizon-monthly-games-march-2026/" target="_blank">UploadVR</a> · <a href="https://www.meta.com/meta-horizon-plus/" target="_blank">Meta.com</a></div>
-    <div>Catalog rotates monthly · Indie Catalog is in beta and may vary by region</div>
+    <div class="footer-meta">
+      <div class="footer-meta-item">
+        <span class="footer-meta-label">CATALOG</span>
+        <span class="footer-meta-value">109 games · Updated March 4, 2026</span>
+      </div>
+      <div class="footer-meta-sep">·</div>
+      <div class="footer-meta-item">
+        <span class="footer-meta-label">SOURCE</span>
+        <a class="footer-meta-link" href="https://www.uploadvr.com/horizon-monthly-games-march-2026/" target="_blank">UploadVR</a>
+        <span style="color:var(--border);margin:0 4px;">·</span>
+        <a class="footer-meta-link" href="https://www.meta.com/meta-horizon-plus/" target="_blank">Meta.com</a>
+      </div>
+      <div class="footer-meta-sep">·</div>
+      <div class="footer-meta-item">
+        <span class="footer-meta-value">Catalog rotates monthly · Indie Catalog is in beta and may vary by region</span>
+      </div>
+    </div>
   </footer>
 
 </div>
