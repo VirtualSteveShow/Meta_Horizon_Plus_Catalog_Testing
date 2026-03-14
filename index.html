@@ -2426,21 +2426,27 @@ function removeGame(name) {
   });
   function doRemove() {
     removed.add(name);
-    if (starred.has(name)) { starred.delete(name); saveStarred(); }
+    if (starred.has(name)) { starred.delete(name); saveStarred(); renderStarred(); }
     saveRemoved();
-    // Remove the card from DOM directly — avoids full grid re-render flash
-    if (targetCard && targetCard.parentNode) targetCard.parentNode.removeChild(targetCard);
-    // Defer full re-render to next frame so removal is visually done first
-    requestAnimationFrame(() => {
-      reRenderAll();
-      renderRemovedPanel();
-      updateRemovedBadge();
-      showUndoToast(name);
-    });
+    // Card already gone from DOM via animation — no need to rebuild the grid
+    // Just update the count label in place (no innerHTML wipe = no art flash)
+    const countEl = document.getElementById('catalog-count');
+    if (countEl) {
+      const current = parseInt(countEl.textContent) || 0;
+      const next = Math.max(0, current - 1);
+      countEl.textContent = next + ' title' + (next !== 1 ? 's' : '');
+    }
+    renderRemovedPanel();
+    updateRemovedBadge();
+    updateNavBtns();
+    showUndoToast(name);
   }
   if (targetCard) {
     targetCard.classList.add('removing');
-    targetCard.addEventListener('animationend', doRemove, { once: true });
+    targetCard.addEventListener('animationend', () => {
+      if (targetCard.parentNode) targetCard.parentNode.removeChild(targetCard);
+      doRemove();
+    }, { once: true });
   } else {
     doRemove();
   }
