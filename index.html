@@ -575,21 +575,13 @@
   .mp-filter-btn[data-mp="coop"].active { border-color: #4ade80; color: #4ade80; }
 
   /* ── REMOVE ANIMATION ── */
-  @keyframes slideOut {
-    0%   { opacity: 1; transform: translateX(0); }
-    100% { opacity: 0; transform: translateX(48px); }
-  }
   @keyframes collapseOut {
-    0%   { max-height: 300px; padding-top: var(--card-pad,0); padding-bottom: var(--card-pad,0); margin-bottom: 8px; }
-    100% { max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-width: 0; }
+    0%   { opacity: 1; max-height: 300px; padding-top: var(--card-pad,0); padding-bottom: var(--card-pad,0); margin-bottom: 8px; }
+    30%  { opacity: 0; }
+    100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-width: 0; }
   }
   .game-card.removing {
-    animation: slideOut 0.32s ease forwards;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .game-card.collapsing {
-    animation: collapseOut 0.22s ease forwards;
+    animation: collapseOut 0.35s ease forwards;
     pointer-events: none;
     overflow: hidden;
   }
@@ -2451,16 +2443,10 @@ function removeGame(name) {
     showUndoToast(name);
   }
   if (targetCard) {
-    // Phase 1: slide out
     targetCard.classList.add('removing');
     targetCard.addEventListener('animationend', () => {
-      // Phase 2: collapse height so cards below move up only after slide is done
-      targetCard.classList.remove('removing');
-      targetCard.classList.add('collapsing');
-      targetCard.addEventListener('animationend', () => {
-        if (targetCard.parentNode) targetCard.parentNode.removeChild(targetCard);
-        doRemove();
-      }, { once: true });
+      if (targetCard.parentNode) targetCard.parentNode.removeChild(targetCard);
+      doRemove();
     }, { once: true });
   } else {
     doRemove();
