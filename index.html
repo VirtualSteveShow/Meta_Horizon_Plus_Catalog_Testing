@@ -1666,20 +1666,20 @@
   <!-- HELP MODAL -->
   <!-- LIST NAME MODAL -->
   <div class="help-overlay" id="list-name-overlay" onclick="if(event.target===this)closeListNameModal()" style="display:none;">
-    <div class="help-modal" style="max-width:420px;">
-      <h3 style="margin-bottom:16px;">✏️ Name Your List</h3>
-      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Give your list a custom name — shown under the page title and included when you share your list.</p>
+    <div class="help-modal" style="max-width:420px;padding:28px 28px 24px;">
+      <h3 style="margin-bottom:12px;font-size:20px;">✏️ Name Your List</h3>
+      <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:20px;">Give your list a custom name — shown under the page title and included when you share your list.</p>
       <input id="list-name-input" type="text" placeholder="e.g. My VR Wishlist"
         maxlength="60"
         style="width:100%;box-sizing:border-box;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.4);color:#e2e8f0;padding:14px 16px;border-radius:8px;font-size:16px;font-family:inherit;margin-bottom:8px;outline:none;letter-spacing:0.02em;"
         onkeydown="if(event.key==='Enter')confirmListName();if(event.key==='Escape')closeListNameModal()">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:20px;text-align:right;" id="list-name-char-count">0 / 60</div>
-      <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:22px;text-align:right;" id="list-name-char-count">0 / 60</div>
+      <div style="display:flex;gap:10px;margin-bottom:18px;">
         <button onclick="closeListNameModal()" style="flex:1;padding:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">Cancel</button>
         <button onclick="confirmListName()" style="flex:1;padding:14px;background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.5);color:var(--blue);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;">Save Name</button>
       </div>
-      <div style="text-align:center;padding-top:4px;border-top:1px solid rgba(255,255,255,0.06);">
-        <button onclick="clearListName()" style="background:none;border:none;color:rgba(239,68,68,0.6);font-size:13px;cursor:pointer;font-family:inherit;padding:8px 0;">✕ Remove name</button>
+      <div style="text-align:center;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06);">
+        <button onclick="clearListName()" style="background:none;border:none;color:rgba(239,68,68,0.6);font-size:13px;cursor:pointer;font-family:inherit;padding:6px 0;">✕ Remove name</button>
       </div>
     </div>
   </div>
