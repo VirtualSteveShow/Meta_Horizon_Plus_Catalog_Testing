@@ -3677,16 +3677,16 @@ function exportList() {
 
   showToast('⏳ Creating share link…');
 
-  // Shorten the URL via TinyURL free API (no key needed)
-  fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl))
+  // Shorten the URL via is.gd free API (direct redirect, no preview page)
+  fetch('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(longUrl))
     .then(r => r.text())
     .then(shortUrl => {
       shortUrl = shortUrl.trim();
-      if (!shortUrl.startsWith('http')) throw new Error('bad response');
+      if (!shortUrl.startsWith('http') || shortUrl.includes('is.gd/create')) throw new Error('bad response');
       doShare(shortUrl, listName, starCount);
     })
     .catch(() => {
-      // TinyURL failed — fall back to long URL
+      // Shortener failed — fall back to long URL
       doShare(longUrl, listName, starCount);
     });
 }
