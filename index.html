@@ -3684,14 +3684,17 @@ function exportList() {
   if (navigator.share && navigator.canShare) {
     generateShareImage(listName, orderedStarred, starred.size).then(blob => {
       const file = new File([blob], 'my-horizon-list.jpg', { type: 'image/jpeg' });
+      const canShareFile = navigator.canShare({ files: [file] });
       const shareData = {
         title: listName + ' — Meta Horizon+ List',
         text: listName + ': ' + starred.size + ' starred games on Meta Horizon+',
-        url: url,
-        files: navigator.canShare({ files: [file] }) ? [file] : undefined,
+        ...(canShareFile ? { files: [file] } : {}),
       };
-      navigator.share(shareData).catch(e => {
-        // User cancelled or share failed — fall back to clipboard
+      // Copy URL to clipboard silently so it's available to paste
+      navigator.clipboard.writeText(url).catch(() => {});
+      navigator.share(shareData).then(() => {
+        showToast('📋 Link also copied to clipboard!');
+      }).catch(e => {
         if (e.name !== 'AbortError') copyUrlToClipboard(url);
       });
     });
