@@ -2565,7 +2565,6 @@ function restoreGame(name) {
     const g = allData.find(x => x.name === name);
     if (g) {
       const grid = document.getElementById('catalog-grid');
-      // Only add if it passes current filters
       const f = catalogFilter;
       const s = f.search.toLowerCase();
       const matchSearch  = !s || g.name.toLowerCase().includes(s) || g.genre.toLowerCase().includes(s);
@@ -2578,7 +2577,6 @@ function restoreGame(name) {
       const passes = matchSearch && matchCatType && matchCatTag && matchUnstarred && matchGenre && matchMp && matchRating;
       if (passes && grid) {
         const newCard = makeCard(g, 0);
-        // Insert in sorted position
         const allCards = [...grid.querySelectorAll('.game-card')];
         const insertBefore = allCards.find(c => {
           const cname = c.querySelector('.game-name')?.textContent || '';
@@ -2586,18 +2584,19 @@ function restoreGame(name) {
         });
         if (insertBefore) grid.insertBefore(newCard, insertBefore);
         else grid.appendChild(newCard);
-        // Update count
         const countEl = document.getElementById('catalog-count');
         if (countEl) {
           const n = (parseInt(countEl.textContent) || 0) + 1;
           countEl.textContent = n + ' title' + (n !== 1 ? 's' : '');
         }
-        // Remove empty state if present
         const emptyEl = grid.querySelector('div[style*="No games match"]');
         if (emptyEl) emptyEl.remove();
       }
     }
-    renderRemovedPanel();
+    // Update hidden section state in-place — no grid rebuild
+    const remaining = removed.size;
+    const section = document.getElementById('removed-section');
+    if (section) section.classList.toggle('has-removed', remaining > 0);
     updateRemovedBadge();
     updateNavBtns();
   }
