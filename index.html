@@ -3661,7 +3661,7 @@ function updateListNameDisplay(name) {
 }
 
 // ══════════════════════════════════════════════════════════
-// EXPORT LIST (share via URL)
+// EXPORT LIST (share via URL + dynamic image on mobile)
 // ══════════════════════════════════════════════════════════
 function exportList() {
   const data = {
@@ -3672,12 +3672,145 @@ function exportList() {
   };
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   const url = window.location.origin + window.location.pathname + '?list=' + encoded;
-  // Copy to clipboard
+  const listName = currentListName || 'Shared List';
+
+  // Build ordered starred list for the share image
+  const orderedStarred = [
+    ...starredOrder.filter(n => starred.has(n) && !removed.has(n)),
+    ...[...starred].filter(n => !starredOrder.includes(n) && !removed.has(n))
+  ].slice(0, 3);
+
+  // Use Web Share API on capable devices (Android Chrome, iOS Safari)
+  if (navigator.share && navigator.canShare) {
+    generateShareImage(listName, orderedStarred, starred.size).then(blob => {
+      const file = new File([blob], 'my-horizon-list.jpg', { type: 'image/jpeg' });
+      const shareData = {
+        title: listName + ' — Meta Horizon+ List',
+        text: listName + ': ' + starred.size + ' starred games on Meta Horizon+',
+        url: url,
+        files: navigator.canShare({ files: [file] }) ? [file] : undefined,
+      };
+      navigator.share(shareData).catch(e => {
+        // User cancelled or share failed — fall back to clipboard
+        if (e.name !== 'AbortError') copyUrlToClipboard(url);
+      });
+    });
+  } else {
+    copyUrlToClipboard(url);
+  }
+}
+
+function copyUrlToClipboard(url) {
   navigator.clipboard.writeText(url).then(() => {
     showToast('📋 Share link copied to clipboard!');
   }).catch(() => {
-    // Fallback: show in prompt for manual copy
     window.prompt('Copy this share link:', url);
+  });
+}
+
+// Generate a dynamic 1200x630 share image with list name + top starred games
+function generateShareImage(listName, topGames, totalStarred) {
+  return new Promise(resolve => {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 630;
+    const ctx = c.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#080e18';
+    ctx.fillRect(0, 0, 1200, 630);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 1200; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,630); ctx.stroke(); }
+    for (let y = 0; y < 630; y += 40)  { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1200,y); ctx.stroke(); }
+
+    // Blue accent bar
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fillRect(0, 0, 6, 630);
+
+    // Glow
+    const grd = ctx.createRadialGradient(600, 315, 0, 600, 315, 500);
+    grd.addColorStop(0, 'rgba(14,165,233,0.10)');
+    grd.addColorStop(1, 'rgba(14,165,233,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 1200, 630);
+
+    // Meta Horizon+ badge
+    ctx.fillStyle = 'rgba(14,165,233,0.15)';
+    ctx.beginPath(); ctx.roundRect(60, 60, 240, 36, 6); ctx.fill();
+    ctx.strokeStyle = 'rgba(14,165,233,0.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(60, 60, 240, 36, 6); ctx.stroke();
+    ctx.fillStyle = '#0ea5e9';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText('META HORIZON+', 78, 84);
+
+    // List name (gold, large)
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 58px sans-serif';
+    // Truncate if too long
+    let displayName = listName;
+    while (ctx.measureText('"' + displayName + '"').width > 780 && displayName.length > 4) {
+      displayName = displayName.slice(0, -1);
+    }
+    if (displayName !== listName) displayName += '...';
+    ctx.fillText('"' + displayName + '"', 60, 195);
+
+    // Subline: starred count
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '24px monospace';
+    ctx.fillText(totalStarred + ' starred games  ·  Meta Horizon+ Catalog', 60, 248);
+
+    // Divider
+    ctx.strokeStyle = 'rgba(14,165,233,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(60, 278); ctx.lineTo(780, 278); ctx.stroke();
+
+    // Top starred games list
+    if (topGames.length > 0) {
+      ctx.fillStyle = 'rgba(14,165,233,0.6)';
+      ctx.font = 'bold 13px monospace';
+      ctx.fillText('TOP STARRED', 60, 310);
+
+      topGames.forEach((name, i) => {
+        const y = 348 + i * 58;
+        // Row bg
+        ctx.fillStyle = 'rgba(14,165,233,0.06)';
+        ctx.beginPath(); ctx.roundRect(60, y - 26, 720, 46, 6); ctx.fill();
+        ctx.strokeStyle = 'rgba(14,165,233,0.15)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.roundRect(60, y - 26, 720, 46, 6); ctx.stroke();
+        // Star
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '18px sans-serif';
+        ctx.fillText('★', 78, y + 2);
+        // Game name
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 20px sans-serif';
+        let gname = name;
+        while (ctx.measureText(gname).width > 620 && gname.length > 4) gname = gname.slice(0,-1);
+        if (gname !== name) gname += '...';
+        ctx.fillText(gname, 108, y + 2);
+        // Genre
+        const g = allData.find(x => x.name === name);
+        if (g) {
+          ctx.fillStyle = '#64748b';
+          ctx.font = '14px monospace';
+          ctx.fillText(g.genre, 108, y + 20);
+        }
+      });
+    }
+
+    // Big H+ watermark right
+    ctx.fillStyle = 'rgba(14,165,233,0.05)';
+    ctx.font = 'bold 360px monospace';
+    ctx.fillText('H+', 700, 560);
+
+    // Virtual Steve credit
+    ctx.fillStyle = 'rgba(245,158,11,0.6)';
+    ctx.font = '14px monospace';
+    ctx.fillText('by Virtual Steve  ·  virtualsteveshow.github.io', 60, 590);
+
+    c.toBlob(resolve, 'image/jpeg', 0.92);
   });
 }
 
