@@ -1360,10 +1360,10 @@
 
   /* ── STAR ── */
   @keyframes starPop {
-    0%   { transform: scale(1.15); }
-    40%  { transform: scale(1.45); }
-    70%  { transform: scale(1.05); }
-    100% { transform: scale(1.15); }
+    0%   { transform: scale(2.3); }
+    40%  { transform: scale(2.8); }
+    70%  { transform: scale(2.1); }
+    100% { transform: scale(2.3); }
   }
   @keyframes starGleam {
     0%        { --gleam-pos: -120%; }
@@ -1391,7 +1391,7 @@
   }
   .star-btn.starred {
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(2.3);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     animation: starGleam 3.5s ease-in-out infinite;
   }
@@ -1401,9 +1401,9 @@
     inset: 0;
     background: linear-gradient(
       105deg,
-      transparent 40%,
-      rgba(255,255,255,0.7) 50%,
-      transparent 60%
+      transparent 35%,
+      rgba(255,255,255,0.9) 50%,
+      transparent 65%
     );
     transform: translateX(var(--gleam-pos));
     pointer-events: none;
@@ -1412,7 +1412,7 @@
   .star-btn.star-just-starred {
     animation: starPop 0.35s ease forwards, starGleam 3.5s ease-in-out 0.35s infinite;
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(2.3);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
 
