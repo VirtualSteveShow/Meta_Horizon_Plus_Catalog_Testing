@@ -1771,6 +1771,30 @@
       <div class="changelog-body">
 
         <div class="changelog-entry">
+          <div class="changelog-version">V 2.0 <span class="changelog-date">March 2026</span></div>
+          <ul>
+            <li>Hidden Games section fully redesigned — full card art with red tint overlay, matching the look of the main catalog and starred section</li>
+            <li>Undo toast — brief popup after hiding a game with a one-tap Undo button</li>
+            <li>Restore All now requires confirmation before clearing all hidden games</li>
+            <li>Main/Indie and MAR/JAN filters are now fully stackable — use any combination simultaneously</li>
+            <li>Empty filter state — when no games match, a message shows which filters are active with a one-tap reset</li>
+            <li>Custom list name redesigned — now displayed in gold with quotes, more prominent under the page title</li>
+            <li>List naming uses a styled in-app dialog instead of the native Android prompt</li>
+            <li>Share now generates a short is.gd link via the Android share sheet — clean text, no giant URL blob</li>
+            <li>Shared lists now auto-expand and scroll to the Starred section on load</li>
+            <li>New 📋 Catalog nav button added — jumps to and expands the catalog section</li>
+            <li>Star, Catalog, Hidden, and Help nav buttons now expand their sections if collapsed before scrolling</li>
+            <li>Nav buttons reordered: ⭐ 📋 🗑 ?</li>
+            <li>Help button shortened to ? to reduce clutter in the nav bar</li>
+            <li>Options button now dims when the Help overlay is open, matching the other nav buttons</li>
+            <li>Toast notifications enlarged and repositioned to clear Android's clipboard notification</li>
+            <li>Card hide animation improved — red flash removed, smoother slide-out</li>
+          </ul>
+        </div>
+
+        <hr class="changelog-divider">
+
+        <div class="changelog-entry">
           <div class="changelog-version">V 1.5 <span class="changelog-date">March 2026</span></div>
           <ul>
             <li>Share curated lists via URL — stars and hidden games encoded into a shareable link</li>
@@ -1916,7 +1940,7 @@
     <div id="list-name-display" style="display:none;font-size:18px;font-weight:700;letter-spacing:0.02em;color:#f59e0b;margin-bottom:6px;text-shadow:0 0 20px rgba(245,158,11,0.3);"></div>
     <div class="header-sub">Complete game list · <span>March 2026</span> · <span id="header-total">107</span> titles · $7.99/mo · <span style="color:var(--green);font-weight:500;">First month free — cancel anytime</span></div>
     <div class="header-byline">A tool by <a href="https://www.youtube.com/@virtualsteven/streams" target="_blank" rel="noopener" style="color:#f59e0b;font-weight:700;text-decoration:none;">Virtual Steve</a></div>
-    <div><span class="version-badge" onclick="toggleChangelog()" title="View patch notes">V 1.5</span></div>
+    <div><span class="version-badge" onclick="toggleChangelog()" title="View patch notes">V 2.0</span></div>
   </header>
 
   <!-- STATS -->
@@ -3661,45 +3685,70 @@ function updateListNameDisplay(name) {
 }
 
 // ══════════════════════════════════════════════════════════
-// EXPORT LIST (share via URL + dynamic image on mobile)
 // ══════════════════════════════════════════════════════════
-function exportList() {
-  const data = {
-    name: currentListName || 'Shared List',
-    starred: [...starred],
-    starredOrder: starredOrder,
-    removed: [...removed],
-  };
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const longUrl = window.location.origin + window.location.pathname + '?list=' + encoded;
-  const listName = currentListName || 'Shared List';
-  const starCount = [...starred].filter(n => !removed.has(n)).length;
+// EXPORT LIST — compact index-based encoding (v2)
+// ══════════════════════════════════════════════════════════
 
-  showToast('⏳ Creating share link…');
-
-  // Shorten the URL via is.gd free API (direct redirect, no preview page)
-  fetch('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(longUrl))
-    .then(r => r.text())
-    .then(shortUrl => {
-      shortUrl = shortUrl.trim();
-      if (!shortUrl.startsWith('http') || shortUrl.includes('is.gd/create')) throw new Error('bad response');
-      doShare(shortUrl, listName, starCount);
-    })
-    .catch(() => {
-      // Shortener failed — fall back to long URL
-      doShare(longUrl, listName, starCount);
-    });
+// Build a name→index lookup once
+function buildNameIndex() {
+  const map = {};
+  allData.forEach((g, i) => { map[g.name] = i; });
+  return map;
 }
 
-function doShare(url, listName, starCount) {
-  const shareText = '"' + listName + '" — ' + starCount + ' starred games on Meta Horizon+';
+function encodeListCompact(listName, starredOrderArr, removedArr) {
+  const idx = buildNameIndex();
+  const compact = {
+    v: 2,
+    n: listName,
+    // s = starredOrder as indices (preserves order, also encodes starred set)
+    s: starredOrderArr.map(n => idx[n]).filter(i => i !== undefined),
+    r: removedArr.map(n => idx[n]).filter(i => i !== undefined),
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+}
 
+function decodeListCompact(encoded) {
+  const raw = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+  // v2 compact format — indices → names
+  if (raw.v === 2) {
+    const starredNames = (raw.s || []).map(i => allData[i]?.name).filter(Boolean);
+    const removedNames = (raw.r || []).map(i => allData[i]?.name).filter(Boolean);
+    return {
+      name: raw.n || 'Shared List',
+      starred: starredNames,
+      starredOrder: starredNames,
+      removed: removedNames,
+    };
+  }
+  // v1 legacy format — game names directly (backwards compatible)
+  return raw;
+}
+
+function exportList() {
+  const listName = currentListName || 'Shared List';
+  const orderedStarred = [
+    ...starredOrder.filter(n => starred.has(n) && !removed.has(n)),
+    ...[...starred].filter(n => !starredOrder.includes(n) && !removed.has(n)),
+  ];
+  const encoded = encodeListCompact(listName, orderedStarred, [...removed]);
+  const url = window.location.origin + window.location.pathname + '?list=' + encoded;
+
+  // Try is.gd to shorten further — already much shorter so failure is fine
+  fetch('https://is.gd/create.php?format=simple&url=' + encodeURIComponent(url))
+    .then(r => r.text())
+    .then(short => {
+      short = short.trim();
+      if (!short.startsWith('http') || short.includes('is.gd/create')) throw new Error();
+      doShare(short);
+    })
+    .catch(() => doShare(url));
+}
+
+function doShare(url) {
   if (navigator.share) {
-    navigator.share({
-      title: listName + ' — Meta Horizon+ List',
-      text: shareText,
-      url: url,
-    }).then(() => {
+    // Share URL only — no text field so platforms don't append the URL to a message body
+    navigator.share({ url }).then(() => {
       showToast('✅ Shared!');
     }).catch(e => {
       if (e.name !== 'AbortError') copyUrlToClipboard(url);
@@ -3833,7 +3882,7 @@ function checkForSharedList() {
   const encoded = params.get('list');
   if (!encoded) return;
   try {
-    const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    const data = decodeListCompact(encoded);
     pendingImport = data;
     // Apply temporarily
     starred = new Set(data.starred || []);
@@ -3950,7 +3999,7 @@ function showToast(msg) {
   toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
 }
 
-// ── V1.5 INIT ──
+// ── V2.0 INIT ──
 initMonthly();
 initCatalogCollapse();
 initStarredCollapse();
