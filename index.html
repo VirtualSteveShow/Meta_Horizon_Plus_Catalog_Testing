@@ -3688,6 +3688,7 @@ function exportList() {
       const shareData = {
         title: listName + ' — Meta Horizon+ List',
         text: listName + ': ' + starred.size + ' starred games on Meta Horizon+',
+        url: url,
         ...(canShareFile ? { files: [file] } : {}),
       };
       // Copy URL to clipboard silently so it's available to paste
