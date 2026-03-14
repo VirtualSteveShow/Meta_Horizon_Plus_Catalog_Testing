@@ -2290,6 +2290,7 @@ function toggleStar(name, btn) {
     localStorage.setItem(ORDER_KEY, JSON.stringify(starredOrder));
   }
   saveStars();
+
   // Update all star buttons for this game in-place — no grid rebuild
   document.querySelectorAll('.star-btn').forEach(b => {
     if (b.dataset.name === name) {
@@ -2297,23 +2298,66 @@ function toggleStar(name, btn) {
       b.classList.toggle('starred', isNowStarred);
       b.classList.remove('star-just-starred');
       if (isNowStarred) {
-        // Force reflow so animation restarts
         void b.offsetWidth;
         b.classList.add('star-just-starred');
-        b.addEventListener('animationend', () => {}, { once: true });
       }
       b.title = isNowStarred ? 'Unstar' : 'Star this game';
     }
   });
-  // Catalog card — just toggle the unstarred filter visibility if needed
-  if (catalogFilter.unstarred) {
-    // unstarred filter is on — need to hide/show the card in place
-    const catalogCards = document.querySelectorAll('#catalog-grid .game-card');
-    catalogCards.forEach(card => {
-      const cardBtn = card.querySelector('.star-btn');
-      if (cardBtn && cardBtn.dataset.name === name) {
-        if (starred.has(name)) {
-          // just starred while unstarred filter on — collapse it out
+
+  if (!isStarring) {
+    // Unstarring — animate the card out of the starred section in-place
+    const starredCards = document.querySelectorAll('#starred-grid .game-card');
+    let starredCard = null;
+    starredCards.forEach(c => { if (c.dataset.name === name) starredCard = c; });
+    if (starredCard) {
+      starredCard.classList.add('removing');
+      starredCard.addEventListener('animationend', () => {
+        if (starredCard.parentNode) starredCard.parentNode.removeChild(starredCard);
+        // Update count in-place
+        const countEl = document.getElementById('starred-count');
+        if (countEl) {
+          const n = Math.max(0, (parseInt(countEl.textContent) || 0) - 1);
+          countEl.textContent = n + ' title' + (n !== 1 ? 's' : '');
+        }
+        const section = document.getElementById('sec-starred');
+        const remaining = document.querySelectorAll('#starred-grid .game-card').length;
+        if (section) section.classList.toggle('has-stars', remaining > 0);
+        updateNavBtns();
+      }, { once: true });
+    } else {
+      renderStarred();
+    }
+    // If unstarred filter is active in catalog, card needs to reappear — full render needed
+    if (catalogFilter.unstarred) renderCatalog();
+  } else {
+    // Starring — just append new card to starred grid, no wipe
+    const g = allData.find(x => x.name === name);
+    if (g) {
+      const grid = document.getElementById('starred-grid');
+      const card = makeCard(g, 0, 'draggable-card', 'unstar');
+      card.setAttribute('draggable', 'true');
+      card.dataset.name = g.name;
+      const handle = document.createElement('div');
+      handle.className = 'drag-handle';
+      handle.innerHTML = '&#8942;&#8942;';
+      handle.title = 'Drag to reorder';
+      card.appendChild(handle);
+      grid.appendChild(card);
+      initDragAndDrop(grid);
+      const countEl = document.getElementById('starred-count');
+      const n = (parseInt(countEl?.textContent) || 0) + 1;
+      if (countEl) countEl.textContent = n + ' title' + (n !== 1 ? 's' : '');
+      const section = document.getElementById('sec-starred');
+      if (section) section.classList.add('has-stars');
+      updateNavBtns();
+    }
+    // If unstarred filter is active, collapse the catalog card out
+    if (catalogFilter.unstarred) {
+      const catalogCards = document.querySelectorAll('#catalog-grid .game-card');
+      catalogCards.forEach(card => {
+        const cardBtn = card.querySelector('.star-btn');
+        if (cardBtn && cardBtn.dataset.name === name) {
           card.classList.add('removing');
           card.addEventListener('animationend', () => {
             if (card.parentNode) card.parentNode.removeChild(card);
@@ -2324,10 +2368,9 @@ function toggleStar(name, btn) {
             }
           }, { once: true });
         }
-      }
-    });
+      });
+    }
   }
-  renderStarred();
 }
 
 function clearAllStars() {
@@ -2508,26 +2551,65 @@ function removeGame(name) {
 function restoreGame(name) {
   removed.delete(name);
   saveRemoved();
-  // Remove card from hidden panel with collapse animation
+
+  // Animate hidden card out first
   const hiddenCards = document.querySelectorAll('#removed-grid .game-card');
   let hiddenCard = null;
   hiddenCards.forEach(c => {
     const b = c.querySelector('.restore-btn');
     if (b && b.dataset.name === name) hiddenCard = c;
   });
+
+  function afterAnimate() {
+    // Add game back into catalog grid in-place (sorted position)
+    const g = allData.find(x => x.name === name);
+    if (g) {
+      const grid = document.getElementById('catalog-grid');
+      // Only add if it passes current filters
+      const f = catalogFilter;
+      const s = f.search.toLowerCase();
+      const matchSearch  = !s || g.name.toLowerCase().includes(s) || g.genre.toLowerCase().includes(s);
+      const matchCatType = f.catType === 'all' || f.catType === g.type;
+      const matchCatTag  = f.catTag === 'all' || g.tag === f.catTag;
+      const matchUnstarred = !f.unstarred || !starred.has(g.name);
+      const matchGenre   = f.genre === 'all' || genreGroup(g.genre) === f.genre;
+      const matchMp      = f.mp === 'all' || (g.mp||[]).includes(f.mp);
+      const matchRating  = f.minRating === 0 || (g.rating && g.rating >= f.minRating);
+      const passes = matchSearch && matchCatType && matchCatTag && matchUnstarred && matchGenre && matchMp && matchRating;
+      if (passes && grid) {
+        const newCard = makeCard(g, 0);
+        // Insert in sorted position
+        const allCards = [...grid.querySelectorAll('.game-card')];
+        const insertBefore = allCards.find(c => {
+          const cname = c.querySelector('.game-name')?.textContent || '';
+          return g.name.localeCompare(cname) < 0;
+        });
+        if (insertBefore) grid.insertBefore(newCard, insertBefore);
+        else grid.appendChild(newCard);
+        // Update count
+        const countEl = document.getElementById('catalog-count');
+        if (countEl) {
+          const n = (parseInt(countEl.textContent) || 0) + 1;
+          countEl.textContent = n + ' title' + (n !== 1 ? 's' : '');
+        }
+        // Remove empty state if present
+        const emptyEl = grid.querySelector('div[style*="No games match"]');
+        if (emptyEl) emptyEl.remove();
+      }
+    }
+    renderRemovedPanel();
+    updateRemovedBadge();
+    updateNavBtns();
+  }
+
   if (hiddenCard) {
     hiddenCard.classList.add('removing');
     hiddenCard.addEventListener('animationend', () => {
       if (hiddenCard.parentNode) hiddenCard.parentNode.removeChild(hiddenCard);
-      // Re-render catalog to add game back (needed), starred stays fine
-      renderCatalog();
-      renderRemovedPanel();
-      updateRemovedBadge();
+      afterAnimate();
     }, { once: true });
   } else {
-    renderCatalog();
-    renderRemovedPanel();
-    updateRemovedBadge();
+    afterAnimate();
   }
 }
 
