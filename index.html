@@ -1360,19 +1360,14 @@
 
   /* ── STAR ── */
   @keyframes starPop {
-    0%   { transform: scale(2.3); }
-    40%  { transform: scale(2.8); }
-    70%  { transform: scale(2.1); }
-    100% { transform: scale(2.3); }
+    0%   { transform: scale(1.15); }
+    40%  { transform: scale(1.45); }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1.15); }
   }
   @keyframes starGleam {
-    0%        { --gleam-pos: -120%; }
-    30%, 100% { --gleam-pos: 220%; }
-  }
-  @property --gleam-pos {
-    syntax: '<percentage>';
-    inherits: false;
-    initial-value: -120%;
+    0%        { transform: translateX(-120%); }
+    30%, 100% { transform: translateX(220%); }
   }
   .star-btn {
     background: rgba(8,14,24,0.7);
@@ -1391,28 +1386,30 @@
   }
   .star-btn.starred {
     opacity: 1;
-    transform: scale(2.3);
+    transform: scale(1.15);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-    animation: starGleam 3.5s ease-in-out infinite;
   }
   .star-btn.starred::after {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
     background: linear-gradient(
       105deg,
-      transparent 35%,
-      rgba(255,255,255,0.9) 50%,
-      transparent 65%
+      transparent 0%,
+      rgba(255,255,255,0.85) 50%,
+      transparent 100%
     );
-    transform: translateX(var(--gleam-pos));
+    animation: starGleam 3s ease-in-out infinite;
     pointer-events: none;
     border-radius: inherit;
   }
   .star-btn.star-just-starred {
-    animation: starPop 0.35s ease forwards, starGleam 3.5s ease-in-out 0.35s infinite;
+    animation: starPop 0.35s ease forwards;
     opacity: 1;
-    transform: scale(2.3);
+    transform: scale(1.15);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
 
