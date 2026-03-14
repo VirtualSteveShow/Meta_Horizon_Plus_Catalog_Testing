@@ -3671,33 +3671,38 @@ function exportList() {
     removed: [...removed],
   };
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const url = window.location.origin + window.location.pathname + '?list=' + encoded;
+  const longUrl = window.location.origin + window.location.pathname + '?list=' + encoded;
   const listName = currentListName || 'Shared List';
+  const starCount = [...starred].filter(n => !removed.has(n)).length;
 
-  // Build ordered starred list for the share image
-  const orderedStarred = [
-    ...starredOrder.filter(n => starred.has(n) && !removed.has(n)),
-    ...[...starred].filter(n => !starredOrder.includes(n) && !removed.has(n))
-  ].slice(0, 3);
+  showToast('⏳ Creating share link…');
 
-  // Use Web Share API on capable devices (Android Chrome, iOS Safari)
-  if (navigator.share && navigator.canShare) {
-    generateShareImage(listName, orderedStarred, starred.size).then(blob => {
-      const file = new File([blob], 'my-horizon-list.jpg', { type: 'image/jpeg' });
-      const canShareFile = navigator.canShare({ files: [file] });
-      const shareData = {
-        title: listName + ' — Meta Horizon+ List',
-        text: listName + ': ' + starred.size + ' starred games on Meta Horizon+',
-        url: url,
-        ...(canShareFile ? { files: [file] } : {}),
-      };
-      // Copy URL to clipboard silently so it's available to paste
-      navigator.clipboard.writeText(url).catch(() => {});
-      navigator.share(shareData).then(() => {
-        showToast('📋 Link also copied to clipboard!');
-      }).catch(e => {
-        if (e.name !== 'AbortError') copyUrlToClipboard(url);
-      });
+  // Shorten the URL via TinyURL free API (no key needed)
+  fetch('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl))
+    .then(r => r.text())
+    .then(shortUrl => {
+      shortUrl = shortUrl.trim();
+      if (!shortUrl.startsWith('http')) throw new Error('bad response');
+      doShare(shortUrl, listName, starCount);
+    })
+    .catch(() => {
+      // TinyURL failed — fall back to long URL
+      doShare(longUrl, listName, starCount);
+    });
+}
+
+function doShare(url, listName, starCount) {
+  const shareText = '"' + listName + '" — ' + starCount + ' starred games on Meta Horizon+';
+
+  if (navigator.share) {
+    navigator.share({
+      title: listName + ' — Meta Horizon+ List',
+      text: shareText,
+      url: url,
+    }).then(() => {
+      showToast('✅ Shared!');
+    }).catch(e => {
+      if (e.name !== 'AbortError') copyUrlToClipboard(url);
     });
   } else {
     copyUrlToClipboard(url);
