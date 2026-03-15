@@ -2383,6 +2383,10 @@ function clearAllStars() {
 }
 
 // ── FILTERS ──
+const GLEAM_PERIOD   = 3500;
+const GLEAM_DURATION =  500;
+let gleamRafId = null;
+
 let catalogFilter = { search: '', cat: 'all', catType: 'all', catTag: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
 let starredSearch = '';
 let starredOrder = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); // manual sort order
@@ -4239,10 +4243,6 @@ function renderStarCanvas(canvas, isStarred, gleamX) {
 }
 
 // Gleam animation loop
-const GLEAM_PERIOD   = 3500; // ms between gleams
-const GLEAM_DURATION =  500; // ms for streak to cross
-let gleamRafId = null;
-
 function startGleamLoop() {
   if (gleamRafId) return;
   let last = null;
