@@ -1381,15 +1381,19 @@
     opacity: 0.5;
     transition: opacity 0.2s, transform 0.2s;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+  .star-gleam-wrap {
     position: relative;
+    display: inline-block;
     overflow: hidden;
+    border-radius: 2px;
   }
   .star-btn.starred {
     opacity: 1;
     transform: scale(1.15);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
-  .star-btn.starred::after {
+  .star-btn.starred .star-gleam-wrap::after {
     content: '';
     position: absolute;
     top: 0;
@@ -1404,7 +1408,6 @@
     );
     animation: starGleam 3s ease-in-out infinite;
     pointer-events: none;
-    border-radius: inherit;
   }
   .star-btn.star-just-starred {
     animation: starPop 0.35s ease forwards;
@@ -2777,7 +2780,7 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
     <div class="card-top-right">
       <button class="star-btn ${starred.has(g.name) ? 'starred' : ''}" data-name="${g.name}"
         onclick="toggleStar('${safeName}', this)"
-        title="${starred.has(g.name) ? 'Unstar' : 'Star this game'}">&#11088;</button>
+        title="${starred.has(g.name) ? 'Unstar' : 'Star this game'}"><span class="star-gleam-wrap">&#11088;</span></button>
     </div>
     <div class="card-bottom-left">
       ${g.rating ? ratingHTML(g) : ''}
