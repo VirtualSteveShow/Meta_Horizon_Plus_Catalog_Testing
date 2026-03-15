@@ -138,8 +138,8 @@
     gap: 6px;
   }
   .top-nav-btn {
-    background: rgba(14,165,233,0.12);
-    border: 1px solid rgba(14,165,233,0.35);
+    background: rgba(8,14,24,0.75);
+    border: 1px solid rgba(14,165,233,0.6);
     color: var(--blue);
     font-size: 17px;
     width: 38px;
@@ -156,8 +156,8 @@
   .inline-help {
     position: static;
     transform: none;
-    background: rgba(14,165,233,0.12);
-    border: 1px solid rgba(14,165,233,0.35);
+    background: rgba(8,14,24,0.75);
+    border: 1px solid rgba(14,165,233,0.6);
     color: var(--blue);
     font-size: 15px;
     font-weight: 700;
@@ -302,8 +302,8 @@
     top: 14px;
     right: 16px;
     z-index: 1500;
-    background: rgba(14,165,233,0.12);
-    border: 1px solid rgba(14,165,233,0.35);
+    background: rgba(8,14,24,0.75);
+    border: 1px solid rgba(14,165,233,0.6);
     color: var(--blue);
     font-size: 18px;
     width: 38px;
@@ -326,8 +326,8 @@
     top: 14px;
     left: 16px;
     z-index: 1500;
-    background: rgba(14,165,233,0.12);
-    border: 1px solid rgba(14,165,233,0.35);
+    background: rgba(8,14,24,0.75);
+    border: 1px solid rgba(14,165,233,0.6);
     color: var(--blue);
     font-size: 18px;
     width: 38px;
@@ -1937,7 +1937,7 @@
     </div>
     <div class="opt-row" style="border-bottom:1px solid rgba(255,255,255,0.05);padding:8px 0;flex-direction:column;align-items:flex-start;gap:6px;">
       <span style="font-size:11px;color:var(--muted);font-weight:600;letter-spacing:0.05em;">MY LIST</span>
-      <button class="opt-action-btn" onclick="promptListName()" style="width:100%;text-align:center;padding:6px;">✏️ Name List</button>
+      <button class="opt-action-btn" id="name-list-btn" onclick="promptListName()" style="width:100%;text-align:center;padding:6px;">✏️ Name List</button>
       <button class="opt-action-btn" onclick="exportList()" style="width:100%;text-align:center;padding:6px;">📤 Export My List</button>
       <button id="save-import-btn" class="opt-action-btn" onclick="openImportModal()" style="display:none;width:100%;text-align:center;padding:6px;border-color:rgba(14,165,233,0.5);color:var(--blue);">💾 Save Imported List</button>
     </div>
@@ -3897,6 +3897,17 @@ function updateListNameDisplay(name) {
     el.style.display = 'block';
   } else {
     el.style.display = 'none';
+  }
+  // Update the options menu button to show current name or default
+  const btn = document.getElementById('name-list-btn');
+  if (!btn) return;
+  if (name) {
+    btn.innerHTML = `<span style="font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;">
+      <span style="color:#f59e0b;font-weight:700;font-size:12px;">"${name.length > 18 ? name.slice(0,18) + '…' : name}"</span>
+      <span style="color:var(--muted);"> · ✏️ rename</span>
+    </span>`;
+  } else {
+    btn.innerHTML = '✏️ Name List';
   }
 }
 
