@@ -2032,28 +2032,7 @@
     </div>
     <div id="monthly-body">
     <div class="deadline">⏰ CLAIM DEADLINE: March 31, 2026 — these leave after this month</div>
-    <div class="monthly-grid">
-      <div class="monthly-card">
-        <div class="monthly-badge">FREE THIS MONTH</div>
-        <div class="monthly-card-title">Arizona Sunshine Remake</div>
-        <div class="monthly-card-genre">Co-op Zombie Shooter</div>
-        <div class="monthly-card-desc">Rebuilt from the ground up with high-res VR textures, gruesome co-op multiplayer, and every piece of DLC from the award-winning original included in one package.</div>
-        <div class="monthly-card-footer">
-          <a class="store-btn" href="https://www.meta.com/experiences/app/7000275296693016/" target="_blank" rel="noopener">🛒 Claim in Store</a>
-          <button class="star-btn" data-name="Arizona Sunshine Remake" onclick="toggleStar(this.dataset.name, this)" title="Star this game">⭐</button>
-        </div>
-      </div>
-      <div class="monthly-card">
-        <div class="monthly-badge">FREE THIS MONTH</div>
-        <div class="monthly-card-title">The Pirate: Republic of Nassau</div>
-        <div class="monthly-card-genre">Naval Strategy / Adventure</div>
-        <div class="monthly-card-desc">Command pirate ships in 18th-century Nassau. Recruit legendary pirates, engage in naval battles, and build your privateering fleet from the heart of pirate culture.</div>
-        <div class="monthly-card-footer">
-          <a class="store-btn" href="https://www.meta.com/experiences/app/7749043518464805/" target="_blank" rel="noopener">🛒 Claim in Store</a>
-          <button class="star-btn" data-name="The Pirate: Republic of Nassau" onclick="toggleStar(this.dataset.name, this)" title="Star this game">⭐</button>
-        </div>
-      </div>
-    </div>
+    <div class="game-grid" id="monthly-grid"></div>
     </div><!-- end monthly-body -->
   </section>
 
@@ -2848,6 +2827,8 @@ function makeCard(g, idx, extraClass = '', xAction = 'remove') {
         ? `<button class="remove-btn" data-name="${g.name}" onclick="toggleStar('${safeName}',this.closest('.game-card').querySelector('.star-btn'))" title="Remove from starred">✕</button>`
         : xAction === 'restore'
         ? `<button class="restore-btn" data-name="${g.name}" onclick="restoreGame('${safeName}')" title="Restore to catalog">&#x21A9; Restore</button>`
+        : xAction === 'none'
+        ? ''
         : (!starred.has(g.name) ? `<button class="remove-btn" data-name="${g.name}" onclick="removeGame('${safeName}')" title="Hide this game">✕</button>` : '')}
     </div>
   `;
@@ -3810,6 +3791,23 @@ function toggleMonthly() {
   localStorage.setItem('mhplus_monthly_collapsed', collapsed ? '0' : '1');
 }
 
+function renderMonthly() {
+  const grid = document.getElementById('monthly-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const monthlyNames = ['Arizona Sunshine Remake', 'The Pirate: Republic of Nassau'];
+  monthlyNames.forEach(name => {
+    const g = allData.find(x => x.name === name);
+    if (!g) return;
+    const card = makeCard(g, 0, 'claimable', 'none');
+    // Change Store button label to Claim in Store
+    const storeBtn = card.querySelector('.store-btn');
+    if (storeBtn) storeBtn.innerHTML = '&#x1F6D2; <span>Claim in Store</span>';
+    grid.appendChild(card);
+  });
+  initStarCanvases();
+}
+
 function initMonthly() {
   const lastSeen = localStorage.getItem(MONTHLY_SEEN_KEY);
   const body = document.getElementById('monthly-body');
@@ -3827,6 +3825,7 @@ function initMonthly() {
       chevron.textContent = '▶';
     }
   }
+  renderMonthly();
 }
 
 // ══════════════════════════════════════════════════════════
