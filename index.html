@@ -1901,6 +1901,19 @@
   </div>
 
   <!-- OPTIONS BUTTON + PANEL (top-left) -->
+  <!-- CONFIRM MODAL -->
+  <div class="help-overlay" id="confirm-overlay" onclick="if(event.target===this)closeConfirmModal()" style="display:none;">
+    <div class="help-modal" style="max-width:380px;padding:28px;">
+      <div id="confirm-icon" style="font-size:32px;text-align:center;margin-bottom:12px;"></div>
+      <h3 id="confirm-title" style="text-align:center;margin-bottom:10px;font-size:18px;"></h3>
+      <p id="confirm-msg" style="color:var(--muted);font-size:14px;text-align:center;line-height:1.6;margin-bottom:24px;"></p>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeConfirmModal()" style="flex:1;padding:14px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;">Cancel</button>
+        <button id="confirm-ok-btn" style="flex:1;padding:14px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;"></button>
+      </div>
+    </div>
+  </div>
+
   <!-- UNDO TOAST -->
   <div id="undo-toast">
     <span class="undo-msg" id="undo-toast-msg"></span>
@@ -2389,13 +2402,23 @@ function toggleStar(name, btn) {
 
 function clearAllStars() {
   if (!starred.size) return;
-  if (!confirm(`Remove all ${starred.size} starred games?`)) return;
-  starred.clear();
-  starredOrder = [];
-  localStorage.removeItem(ORDER_KEY);
-  saveStars();
-  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('starred'));
-  renderStarred();
+  const n = starred.size;
+  showConfirmModal(
+    '⭐',
+    'Clear All Starred Games?',
+    `This will remove all ${n} starred game${n !== 1 ? 's' : ''} from your list. This cannot be undone.`,
+    'Clear All Stars',
+    'background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.5);color:#fca5a5;',
+    () => {
+      starred.clear();
+      starredOrder = [];
+      localStorage.removeItem(ORDER_KEY);
+      saveStars();
+      document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('starred'));
+      renderStarred();
+      showToast(`Cleared ${n} starred game${n !== 1 ? 's' : ''}`);
+    }
+  );
 }
 
 // ── FILTERS ──
@@ -2403,7 +2426,7 @@ const GLEAM_PERIOD   = 3500;
 const GLEAM_DURATION =  500;
 let gleamRafId = null;
 
-let catalogFilter = { search: '', cat: 'all', catType: 'all', catTag: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
+let catalogFilter = { search: '', cat: 'all', catType: 'all', catTags: new Set(), sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
 let starredSearch = '';
 let starredOrder = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); // manual sort order
 
@@ -2587,7 +2610,7 @@ function restoreGame(name) {
       const s = f.search.toLowerCase();
       const matchSearch  = !s || g.name.toLowerCase().includes(s) || g.genre.toLowerCase().includes(s);
       const matchCatType = f.catType === 'all' || f.catType === g.type;
-      const matchCatTag  = f.catTag === 'all' || g.tag === f.catTag;
+      const matchCatTag  = f.catTags.size === 0 || f.catTags.has(g.tag);
       const matchUnstarred = !f.unstarred || !starred.has(g.name);
       const matchGenre   = f.genre === 'all' || genreGroup(g.genre) === f.genre;
       const matchMp      = f.mp === 'all' || (g.mp||[]).includes(f.mp);
@@ -2632,12 +2655,22 @@ function restoreGame(name) {
 
 function restoreAll() {
   if (removed.size === 0) return;
-  if (!confirm(`Restore all ${removed.size} hidden game${removed.size !== 1 ? 's' : ''} back to the catalog?`)) return;
-  removed.clear();
-  saveRemoved();
-  reRenderAll();
-  renderRemovedPanel();
-  updateRemovedBadge();
+  const n = removed.size;
+  showConfirmModal(
+    '↩',
+    'Restore All Hidden Games?',
+    `This will add all ${n} hidden game${n !== 1 ? 's' : ''} back to your catalog.`,
+    'Restore All',
+    'background:rgba(14,165,233,0.2);border:1px solid rgba(14,165,233,0.5);color:var(--blue);',
+    () => {
+      removed.clear();
+      saveRemoved();
+      reRenderAll();
+      renderRemovedPanel();
+      updateRemovedBadge();
+      showToast(`↩ ${n} game${n !== 1 ? 's' : ''} restored`);
+    }
+  );
 }
 
 function reRenderAll() {
@@ -2816,7 +2849,7 @@ function renderCatalog() {
     if (removed.has(g.name)) return false;
     const matchSearch  = !s || g.name.toLowerCase().includes(s) || g.genre.toLowerCase().includes(s);
     const matchCatType = f.catType === 'all' || f.catType === g.type;
-    const matchCatTag  = f.catTag === 'all' || g.tag === f.catTag;
+    const matchCatTag  = f.catTags.size === 0 || f.catTags.has(g.tag);
     const matchCat     = matchCatType && matchCatTag;
     const matchUnstarred = !f.unstarred || !starred.has(g.name);
     const matchGenre   = f.genre === 'all' || genreGroup(g.genre) === f.genre;
@@ -2835,7 +2868,7 @@ function renderCatalog() {
     empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:48px 24px;color:var(--muted);font-size:14px;line-height:1.8;';
     const activeFilters = [
       f.catType !== 'all' && f.catType,
-      f.catTag  !== 'all' && f.catTag,
+      ...[...f.catTags],
       f.genre !== 'all' && f.genre,
       f.mp !== 'all' && f.mp,
       f.search && `"${f.search}"`,
@@ -3221,13 +3254,18 @@ function setCatalogFilter(key, val, btn) {
       catalogFilter.catType = isActive ? 'all' : val;
       if (!isActive) btn.classList.add('active');
     } else if (isTag) {
-      // Toggle tag filter; leave type filter alone
-      sec.querySelectorAll('.cat-filter-btn[data-cat="MAR"],.cat-filter-btn[data-cat="JAN"]').forEach(b => { b.classList.remove('active'); b.blur(); });
-      catalogFilter.catTag = isActive ? 'all' : val;
-      if (!isActive) btn.classList.add('active');
+      // Toggle tag in/out of set — multiple tags can be active simultaneously
+      if (catalogFilter.catTags.has(val)) {
+        catalogFilter.catTags.delete(val);
+        btn.classList.remove('active');
+      } else {
+        catalogFilter.catTags.add(val);
+        btn.classList.add('active');
+      }
+      btn.blur();
     }
     catalogFilter.cat = catalogFilter.catType !== 'all' ? catalogFilter.catType :
-                        catalogFilter.catTag  !== 'all' ? catalogFilter.catTag : 'all';
+                        catalogFilter.catTags.size > 0 ? [...catalogFilter.catTags].join('+') : 'all';
     btn.blur();
   } else if (key === 'mp') {
     if (btn.classList.contains('active')) {
@@ -3251,7 +3289,7 @@ function setCatalogFilter(key, val, btn) {
 
 function isAnyFilterActive() {
   return catalogFilter.catType !== 'all' ||
-         catalogFilter.catTag !== 'all' ||
+         catalogFilter.catTags.size > 0 ||
          catalogFilter.genre !== 'all' ||
          catalogFilter.mp !== 'all' ||
          catalogFilter.sort !== 'az' ||
@@ -3275,7 +3313,7 @@ function updateResetBtn() {
 }
 
 function resetAllFilters() {
-  catalogFilter = { search: '', cat: 'all', catType: 'all', catTag: 'all', sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
+  catalogFilter = { search: '', cat: 'all', catType: 'all', catTags: new Set(), sort: 'az', genre: 'all', mp: 'all', unstarred: false, minRating: 0 };
   // Reset search
   document.getElementById('catalog-search').value = '';
   // Reset cat buttons
@@ -3370,7 +3408,7 @@ function syncMenuFilters() {
     } else if (b.dataset.cat === 'games' || b.dataset.cat === 'indie') {
       b.classList.toggle('active', b.dataset.cat === catalogFilter.catType);
     } else if (b.dataset.cat === 'MAR' || b.dataset.cat === 'JAN') {
-      b.classList.toggle('active', b.dataset.cat === catalogFilter.catTag);
+      b.classList.toggle('active', catalogFilter.catTags.has(b.dataset.cat));
     }
   });
   // Sync mp button label
@@ -4131,6 +4169,23 @@ function confirmSaveImport() {
 }
 
 // ══════════════════════════════════════════════════════════
+// CONFIRM MODAL
+// ══════════════════════════════════════════════════════════
+function showConfirmModal(icon, title, msg, okLabel, okStyle, onConfirm) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.textContent = okLabel;
+  okBtn.style.cssText = okStyle;
+  okBtn.onclick = () => { closeConfirmModal(); onConfirm(); };
+  const overlay = document.getElementById('confirm-overlay');
+  overlay.style.display = 'flex';
+}
+function closeConfirmModal() {
+  document.getElementById('confirm-overlay').style.display = 'none';
+}
+
 // TOAST NOTIFICATION
 // ══════════════════════════════════════════════════════════
 let _lastRemovedName = null;
