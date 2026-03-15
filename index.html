@@ -2303,6 +2303,19 @@ function toggleStar(name, btn) {
         b.classList.add('star-just-starred');
       }
       b.title = isNowStarred ? 'Unstar' : 'Star this game';
+      // Update remove button visibility on catalog cards
+      const card = b.closest('.game-card');
+      if (card && card.closest('#catalog-grid')) {
+        const bottomRight = card.querySelector('.card-bottom-right');
+        if (bottomRight) {
+          const safeName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          if (!isNowStarred) {
+            bottomRight.innerHTML = `<button class="remove-btn" data-name="${name}" onclick="removeGame('${safeName}')" title="Hide this game">✕</button>`;
+          } else {
+            bottomRight.innerHTML = '';
+          }
+        }
+      }
     }
   });
 
